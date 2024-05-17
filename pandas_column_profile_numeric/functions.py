@@ -1,203 +1,140 @@
-andas as pd
+
+import pandas as pd
 import numpy as np
-from scipy.stats import norm, lognorm, expon, gamma
+from scipy import stats
+from scipy.stats import kurtosis, ttest_1samp, ttest_ind, ttest_rel, chi2_contingency
 
-
-def calculate_mean(column):
+def calculate_mean(df, column_name):
     """
-    Calculate the mean of the input column.
+    Function to calculate the mean of a numeric column in a pandas dataframe.
     
-    Parameters:
-        column (pandas.Series): Input column
+    Args:
+        df (pandas.DataFrame): The input dataframe.
+        column_name (str): The name of the column to calculate the mean for.
         
     Returns:
-        float: Mean of the column
+        float: The mean value of the specified column.
     """
-    if column.isnull().all() or column.empty:
+    try:
+        return df[column_name].mean()
+    except KeyError:
+        raise ValueError(f"Column '{column_name}' does not exist in the dataframe.")
+    except TypeError:
+        raise TypeError("The specified column is not numeric.")
+
+def calculate_median(df, column_name):
+    """
+    Calculates the median of a numeric column in a pandas dataframe.
+    
+    Args:
+        df (pd.DataFrame): The pandas dataframe containing the column.
+        column_name (str): The name of the column to calculate the median for.
+        
+    Returns:
+        float: The median value of the specified column.
+    """
+    return df[column_name].median()
+
+def calculate_mode(df, column_name):
+    """
+    Calculates the mode of a numeric column in a pandas dataframe.
+    
+    Args:
+        df (pd.DataFrame): The pandas dataframe containing the column.
+        column_name (str): The name of the column to calculate the mode for.
+        
+    Returns:
+        float: The mode value of the specified column. 
+               If multiple modes are present, returns one of them.
+               Returns None if no mode is found or if errors occur.
+    """
+    if df.empty or column_name not in df.columns:
         return None
     
-    mean = column.mean()
+    values = df[column_name].values
+    mode_value = stats.mode(values)
     
-    return mean
+    return mode_value.mode[0] if mode_value.mode.size > 0 else None
 
-
-def calculate_median(column):
+def calculate_quartiles(column):
     """
-    Calculate the median of the input column.
-    
-    Parameters:
-        column (pandas.Series): Numeric column for which median needs to be calculated
-    
-    Returns:
-        float: Median of the input column
-    """
-    return column.median()
+    Calculate the quartiles of a numeric column.
 
-
-def calculate_mode(column):
-    """
-    Calculate the mode of the input column.
-    
-    Parameters:
-        column (pandas.Series): Input column
-        
-    Returns:
-        pandas.Series: Mode(s) of the input column
-    """
-    mode = column.mode()
-    
-    return mode
-
-
-def calculate_standard_deviation(column):
-    """
-    Calculate the standard deviation of the input column.
-    
-    Parameters:
-        column (pandas.Series): Input column
-        
-    Returns:
-        float: Standard deviation of the column
-    """
-    return np.std(column)
-
-
-def handle_missing_data(column):
-    """
-    Handle missing data in the input column by replacing them with the median value.
-    
-    Parameters:
-        column (pandas.Series): Input column
-        
-     Returns:
-         pandas.Series: Column with missing values replaced with median
-     """
-     if column.isnull().any():
-         # Replace missing values with the median of the column
-         column = column.fillna(column.median())
-     
-     return column
-
-
-def handle_infinite_data(column):
-     """
-     Handle infinite data in the input column by replacing infinite values with NaN.
-     
      Parameters:
-         column (pandas.Series): Input column
-         
+         - data (pandas.Series): Numeric column to calculate quartiles.
+
      Returns:
-         pandas.Series: Column with infinite values replaced with NaN
+         pandas.Series: Quartiles of the numeric column.
      """
-     column.replace([np.inf, -np.inf], np.nan, inplace=True)
-     
-     # Count the number of infinite values
-     num_infinite = column.isin([np.inf, -np.inf]).sum()
-     
-     return column, num_infinite
+     return column.quantile([0.25, 0.5, 0.75])
 
-
-def check_null_columns(df):
-    """
-    Check for null columns in the dataframe.
-    
-    Parameters:
-        df (pandas.DataFrame): The dataframe to check.
-        
-    Returns:
-        list: A list of column names that contain null values.
-    """
-    null_columns = df.columns[df.isnull().any()].tolist()
-    
-    return null_columns
-
-
-def check_trivial_columns(dataframe):
-    """
-    Check for trivial columns (columns with only one unique value) in the dataframe.
-    
-    Parameters:
-        dataframe (pandas.DataFrame): The dataframe to check.
-        
-    Returns:
-        list: A list of column names that contain trivial values.
-    """
-    trivial_columns = []
-    
-    for column in dataframe.columns:
-        unique_values = dataframe[column].nunique()
-        
-        if unique_values == 1:
-            trivial_columns.append(column)
-    
-    return trivial_columns
-
-
-def calculate_missing_prevalence(column):
-    """
-    Calculate the prevalence of missing values in the input column.
-    
-    Parameters:
-        column (pandas.Series): Input column to analyze.
-        
-    Returns:
-        float: Prevalence of missing values in the input column.
-    """
-    missing_count = column.isnull().sum()
-    total_count = len(column)
-    missing_prevalence = missing_count / total_count
-    
-    return missing_prevalence
-
-
-def calculate_zero_prevalence(column):
+def calculate_range(data):
      """
-     Calculate the prevalence of zero values in the input column.
-     
+     Calculate the range of a numeric column.
+
      Parameters:
-         - column: Pandas Series or dataframe column containing numeric values.
-         
+         - data (pandas.Series): Numeric column to calculate range.
+
      Returns:
-         - Prevalence of zero values as a float between 0 and 1.
+         float: Range of the numeric column.
      """
-     if pd.isnull(column).all() or len(column.dropna()) == 0:
-         raise ValueError("Invalid input column")
-     
-     num_zeros = (column == 0).sum()
-     prevalence = num_zeros / len(column)
-     
-     return prevalence
+     return np.max(data) - np.min(data)
 
+def calculate_standard_deviation(df, column_name):
+     """
+     Calculate the standard deviation of a numeric column in a pandas dataframe.
 
-def estimate_distribution(column):
-    """
-    Estimate the likely statistical distribution of the input column.
-    
-    Parameters:
-        column (pandas.Series): Input column
-        
-    Returns:
-        tuple: The name of the best fit distribution and its parameters
-    """
-    data = column.dropna().replace(0, np.nan)
-    
-    if len(data) < 3:
-        return "Not enough non-trivial data points for estimation"
-    
-    distributions = [norm, lognorm, expon, gamma]
-    best_fit = None
-    best_fit_params = None
-    best_fit_score = float('inf')
-    
-    for distribution in distributions:
-        params = distribution.fit(data)
-        
-        pdf_values = distribution.pdf(data, *params[:-2], loc=params[-2], scale=params[-1])
-        sse = np.sum(np.power((data - pdf_values), 2.0))
-        
-        if sse < best_fit_score:
-            best_fit = distribution.name
-            best_fit_params = params
-            best_fit_score = sse
-    
-    return (best_fit, best_fit_params
+     Parameters:
+         - df (pandas.DataFrame): Input dataframe
+         - colname (str): Name of numeric columns whose standard deviation is calculated
+
+      Returns:
+          float: Standard deviation
+      """
+      col = df[colname]
+      if pd.api.types.is_numeric_dtype(col):
+          return np.std(col)
+      else:
+          raise ValueError("Column should be numeric")
+
+ def calculate_variance(df, colname):
+      """
+      Function to calculate variance 
+      
+      Parameters
+           - df(pandas.DataFrame)
+           - colname(str)
+           
+       returns
+            float: variance value
+       """  
+       if colname not in df.columns():
+           raise ValueError("Column does not exist")
+           
+       values = df[colname].replace(np.inf,np.nan).dropna().values()
+       if len(values)<2 : raise ValueError("Not enough valid values")
+       
+       return np.var(values)
+
+ def calcuate_skewness(column) :
+      """
+      calculates skewness in given columns
+      
+      Parameter :
+              Column(panda.Series) 
+              
+       returns : 
+            Float : skewness value
+       """   
+       
+       if not pd.api.types.is_numeric_dtype(column):
+            raise ValueError("columns should be numeric")
+      
+      # drop missing values
+      columns = columns.replace(np.inf,np.nan).dropna()
+      
+      #calculating skewness using panda's skew function 
+      skewness = columns.skew()
+      
+       
+          

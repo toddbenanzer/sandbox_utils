@@ -1,75 +1,144 @@
 
-import pandas as pd
+import os
+import pytest
 from pptx import Presentation
-from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE
+from pptx.util import Inches
+import pandas as pd
 
 
-def test_create_bar_chart():
-    # Create a test dataframe
-    data = {
+@pytest.fixture
+def dataframe():
+    return pd.DataFrame({
         'Category': ['A', 'B', 'C'],
-        'Value': [1, 2, 3]
-    }
-    df = pd.DataFrame(data)
-
-    # Call the function to be tested
-    create_bar_chart(df, "Test Chart")
-
-    # Load the saved presentation
-    prs = Presentation("bar_chart.pptx")
-
-    # Check if the presentation has exactly one slide
-    assert len(prs.slides) == 1
-
-    # Get the shapes in the slide
-    slide = prs.slides[0]
-    shapes = slide.shapes
-
-    # Check if the title is set correctly
-    title_shape = shapes.title
-    assert title_shape.text == "Test Chart"
-
-    # Check if the chart data is set correctly
-    chart = shapes[1].chart  # Assuming chart shape is at index 1 in shapes list
-
-    # Get the categories from the chart data
-    categories = [category.label for category in chart.plots[0].categories]
-
-    # Check if the categories are set correctly
-    assert categories == ['Category']
-
-    # Get the series values from the chart data
-    series_values = []
-    for series in chart.series:
-        series_values.append([point.value for point in series.points])
-
-    # Check if the series values are set correctly
-    assert series_values == [[1], [2], [3]]
+        'Value': [10, 20, 30]
+    })
 
 
-def test_convert_df_to_line_chart():
-    # Create a dummy DataFrame for testing
-    data = {
-        'X': [1, 2, 3, 4, 5],
-        'Y': [10, 20, 30, 40, 50]
-    }
-    df = pd.DataFrame(data)
+def test_dataframe_to_bar_chart(dataframe):
+    title = 'Sample Chart'
+    presentation = dataframe_to_bar_chart(dataframe, title)
 
-    # Call the function with the dummy DataFrame and chart title
-    chart_title = "Test Line Chart"
-    convert_df_to_line_chart(df, chart_title)
+    assert isinstance(presentation, Presentation)
+    assert len(presentation.slides) == 1
 
-    # Verify that the file has been created
-    assert os.path.exists("line_chart.pptx")
-
-    # Verify that the chart title is set correctly
-    presentation = Presentation("line_chart.pptx")
     slide = presentation.slides[0]
+    assert slide.shapes.title.text == title
+
     chart = slide.shapes[0].chart
+    assert chart.chart_type == XL_CHART_TYPE.BAR_CLUSTERED
 
-    assert chart.has_title
-    assert chart.chart_title.text_frame.text == chart_title
 
-    # Clean up: delete the created file
-    os.remove("line_chart.pptx")
+@pytest.fixture(scope='module')
+def sample_dataframe():
+    data = {
+        'Year': [2010, 2011, 2012, 2013, 2014, 2015],
+        'Sales': [5, 7, 3, 9, 6, 10],
+        'Profit': [2, 3, 1, 6, 4, 8]
+    }
+    return pd.DataFrame(data)
+
+
+def test_dataframe_to_line_chart(sample_dataframe):
+    prs = dataframe_to_line_chart(sample_dataframe, 'Sales and Profit')
+    
+    assert isinstance(prs, Presentation)
+
+    chart = prs.slides[0].shapes[0].chart
+    assert chart.chart_type == XL_CHART_TYPE.LINE
+    assert chart.chart_title.text_frame.text == 'Sales and Profit'
+
+    expected_categories = ['Year', 'Sales', 'Profit']
+    actual_categories = [category.name for category in chart.category_axis.categories]
+    assert actual_categories == expected_categories
+
+    expected_series = {'Sales': [5, 7, 3, 9, 6, 10], 'Profit': [2, 3, 1, 6, 4, 8]}
+    actual_series = {}
+    for series in chart.series:
+        actual_series[series.name] = [point.value for point in series.values]
+    
+    assert actual_series == expected_series
+
+
+def test_save_presentation(sample_dataframe):
+    prs = dataframe_to_line_chart(sample_dataframe, 'Sales and Profit')
+    
+    prs.save('test_line_chart.pptx')
+    
+    assert os.path.exists('test_line_chart.pptx')
+
+    
+@pytest.fixture(scope='module')
+def scatter_data():
+    return pd.DataFrame({'x': [1, 2, 3], 'y': [5, 4, 3]})
+
+
+def test_dataframe_to_scatter_plot_creates_ppt(scatter_data):
+   dataframe_to_scatter_plot(scatter_data)
+   assert os.path.exists('scatter_plot.pptx')
+
+
+def test_dataframe_to_scatter_plot_contains_slide_with_picture(scatter_data):
+   dataframe_to_scatter_plot(scatter_data)
+   prs = Presentation('scatter_plot.pptx')
+   slide = prs.slides[0]
+   assert len(slide.shapes) >= 1
+
+
+def test_dataframe_to_scatter_plot_removes_temp_file(scatter_data):
+   dataframe_to_scatter_plot(scatter_data)
+   assert not os.path.exists('scatter_plot.png')
+
+
+def test_dataframe_to_scatter_plot_generates_correct_plot(scatter_data):
+   dataframe_to_scatter_plot(scatter_data)
+   prs = Presentation('scatter_plot.pptx')
+   picture = prs.slides[0].shapes[0]
+   assert picture.width == Inches(6) and picture.height == Inches(4)
+
+
+@pytest.fixture(scope='module')
+def pie_chart_df():
+   return pd.DataFrame({'Category': ['A', 'B', 'C'], 'Value': [1,2 ,3]})
+
+
+def test_convert_dataframe_to_pie_chart(pie_chart_df):
+   title = "Test Chart"
+   prs = convert_dataframe_to_pie_chart(pie_chart_df,title)
+
+   assert isinstance(prs ,Presentation)
+   
+   
+@pytest.fixture(scope='module')
+def sample_stacked_area_df():
+     return pd.DataFrame({'A':[1 ,2 ,3],'B':[4 ,5 ,6],'C':[7 ,8 ,9]})
+
+
+@pytest.fixture(scope='module')
+def sample_title():
+     return "Sample Stacked Bar Chart"
+
+
+@pytest.mark.parametrize("func", [
+     (dataframe_to_stacked_area_chart,sample_stacked_area_df,sample_title),
+     (dataframe_to_stacked_bar_chart,sample_stacked_area_df,sample_title)
+])
+ 
+ def test_stacked_charts(func,sample_stacked_area_df,sample_title):
+     result= func(sample_stacked_area_df,sample_title)
+
+     slide= result.slides[0]
+     chart= slide.shapes[0].chart
+
+     if func.__name__== "dataframe_to_stacked_area_chart":
+         expected_type= XL_CHART_TYPE.AREA_STACKED
+     
+      else:
+         expected_type= XL_CHART_TYPE.BAR_STACKED
+      
+      assert chart.chart_type== expected_type
+
+      #assertions for legend 
+      if func.__name__== "dataframe_to_stacked_bar_chart":
+         assert chart.legend.position== XL_LEGEND_POSITION.BOTTOM      
+

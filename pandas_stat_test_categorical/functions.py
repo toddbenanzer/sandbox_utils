@@ -1,816 +1,448 @@
-andas as pd
+
+import pandas as pd
 import numpy as np
-from scipy.stats import chi2_contingency
+from scipy.stats import skew, kurtosis
 
-def calculate_category_frequency(dataframe, column_name):
+
+def calculate_category_frequency(df, column_name):
     """
-    Calculate the frequency of each category in a column of a pandas dataframe.
+    Function to calculate the frequency of each category in a column of a pandas dataframe.
 
     Parameters:
-    dataframe (pandas.DataFrame): The input dataframe.
-    column_name (str): The name of the column to calculate frequencies.
+    df (pandas.DataFrame): The input dataframe.
+    column_name (str): The name of the column to calculate the frequency for.
 
     Returns:
-    pandas.DataFrame: A dataframe with two columns - 'Category' and 'Frequency'.
-                      'Category' contains the unique categories in the column,
-                      and 'Frequency' contains the count of each category.
+    pandas.Series: A series containing the frequency count for each category in the specified column.
     """
-    
-    # Calculate the frequency of each unique category
-    category_counts = dataframe[column_name].value_counts().reset_index()
-
-    # Rename the columns
-    category_counts.columns = ['Category', 'Frequency']
-
-    return category_counts
-
-
-
-def calculate_category_proportions(dataframe, column_name):
-    """
-    Calculate the proportion of each category in a column of a pandas dataframe.
-
-    Parameters:
-        dataframe (pandas.DataFrame): The input dataframe.
-        column_name (str): The name of the target column.
-
-    Returns:
-        pandas.DataFrame: A dataframe with two columns: 'Category' and 'Proportion'.
-                          'Category' contains the unique categories in the specified column,
-                          and 'Proportion' contains the calculated proportions.
-
-    """
-
-    # Check if the column exists in the dataframe
-    if column_name not in dataframe.columns:
+    if column_name not in df.columns:
         raise ValueError(f"Column '{column_name}' does not exist in the dataframe.")
-
-    # Calculate the frequency count of each category
-    category_counts = dataframe[column_name].value_counts(dropna=False)
-
-    # Calculate the proportion of each category
-    category_proportions = category_counts / len(dataframe)
-
-    # Create a new dataframe to store the results
-    result_dataframe = pd.DataFrame({'Category': category_proportions.index, 'Proportion': category_proportions.values})
-
-    return result_dataframe
+    
+    return df[column_name].value_counts()
 
 
-
-def calculate_category_percentage(column):
+def calculate_category_percentage(df, column_name):
     """
-    Function to calculate the percentage of each category in a column.
-
+    Calculates the percentage of each category in a column of a pandas dataframe.
+    
     Parameters:
-    column (pandas.Series): The column for which to calculate the category percentages.
-
+        - df: The pandas dataframe containing the data.
+        - column_name: The name of the column to calculate the category percentages for.
+        
     Returns:
-    pandas.DataFrame: A dataframe with two columns - 'category' and 'percentage'.
-
+        - A new pandas dataframe with two columns: 'Category' and 'Percentage'.
+          The 'Category' column contains the unique categories from the input column,
+          and the 'Percentage' column contains the corresponding percentage values. 
     """
-
-    # Calculate the total count of values in the column
-    total_count = len(column)
-
-    # Calculate the count of each category in the column
-    category_counts = column.value_counts()
-
-    # Calculate the percentage of each category
+    cleaned_column = df[column_name].replace([pd.NA, float('inf'), float('-inf')], pd.NA).dropna()
+    category_counts = cleaned_column.value_counts()
+    total_count = len(cleaned_column)
+    
     category_percentages = (category_counts / total_count) * 100
-
-    # Create a dataframe with 'category' and 'percentage' columns
-    result_df = pd.DataFrame({'category': category_percentages.index, 'percentage': category_percentages.values})
-
-    return result_df
-
-
-
-def calculate_cumulative_frequency(df, column_name):
-    # Drop any rows with missing or null values in the specified column
-    df = df.dropna(subset=[column_name])
     
-    # Calculate the frequency count of each category in the column
-    frequency_counts = df[column_name].value_counts()
-    
-    # Sort the frequency counts by category name
-    sorted_counts = frequency_counts.sort_index()
-    
-    # Calculate the cumulative sum of the frequency counts
-    cumulative_frequencies = sorted_counts.cumsum()
-    
-    return cumulative_frequencies
+    return pd.DataFrame({'Category': category_percentages.index, 'Percentage': category_percentages.values})
 
 
-
-def calculate_cumulative_proportion(data, column_name):
+def calculate_all_columns_category_frequency(df):
     """
-    Calculate the cumulative proportion of each category in a column of a pandas DataFrame.
+    Calculate the frequency of each category across all columns in a pandas dataframe.
 
     Parameters:
-    data (pandas DataFrame): The input DataFrame.
-    column_name (str): The name of the column to calculate the cumulative proportion for.
+        df (pandas.DataFrame): The input dataframe.
 
     Returns:
-    pandas DataFrame: A DataFrame containing the cumulative proportion for each category in the specified column.
-   """
-   
-   # Count the occurrences of each category in the specified column
-    category_counts = data[column_name].value_counts()
-
-    # Calculate the cumulative sum of the counts
-    cumulative_counts = category_counts.cumsum()
-
-    # Calculate the total count
-    total_count = len(data)
-
-    # Calculate the cumulative proportion for each category
-    cumulative_proportions = cumulative_counts / total_count
-
-    # Create a new DataFrame with the category names and their corresponding cumulative proportions
-    result = pd.DataFrame({
-        'Category': cumulative_proportions.index,
-        'Cumulative Proportion': cumulative_proportions.values
-    })
-
-    return result
-
-
-
-def calculate_cumulative_percentage(df, column_name):
-    # Calculate the count of each category in the column
-    category_counts = df[column_name].value_counts()
-    
-    # Calculate the cumulative sum of the category counts
-    cumulative_counts = category_counts.cumsum()
-    
-    # Calculate the total count of all categories
-    total_count = category_counts.sum()
-    
-    # Calculate the cumulative percentage of each category
-    cumulative_percentage = cumulative_counts / total_count * 100
-    
-    return cumulative_percentage
-
-
-andas as pd
-
-def calculate_mode(column):
+        pandas.DataFrame: A dataframe containing the frequency of each category.
     """
-    Function to calculate the mode(s) of a column.
+    return df.apply(lambda col: col.value_counts()).fillna(0)
 
+
+def calculate_all_columns_category_percentage(df):
+    """
+    Function to calculate the percentage of each category across all columns in a pandas dataframe.
+    
     Parameters:
-    column (pandas.Series): The input column to calculate the mode(s) for.
-
-    Returns:
-    list: A list of mode(s) of the column.
-   """
-   
-   # Drop missing values from the column
-   column = column.dropna()
-
-   # Calculate the mode(s) using the value_counts() function
-   modes = column.value_counts().index.tolist()
-
-   return modes
-
-
-def calculate_median(df, column_name):
-    """
-     Calculate the median(s) of a column in a pandas dataframe.
-    
-     Parameters:
-         - df: Input pandas dataframe.
-         - column_name: Name of the column for which to calculate the median(s).
+        df (pandas.DataFrame): Input dataframe
         
-     Returns:
-         - List of medians for each unique category in the specified column.
+    Returns:
+        pandas.DataFrame: Dataframe with the percentage of each category across all columns
     """
-    medians = []
     
-    # Group the dataframe by the specified column
-    grouped_df = df.groupby(column_name)
-    
-    # Calculate median for each group
-    for group_name, group_data in grouped_df:
-        median = group_data[column_name].median()
-        medians.append(median)
-    
-    return medians
+    return df.apply(lambda x: x.value_counts(normalize=True) * 100).fillna(0)
 
 
-
-def calculate_range(df, column_name):
+def handle_missing_data(df, method='exclude', value=None):
     """
-    Calculate the range of values in a column of a pandas dataframe.
+    Function to handle missing data by excluding or imputing values.
     
     Parameters:
-        - df: pandas dataframe
-        - column_name: str, name of the column in the dataframe
+        - df: pandas dataframe containing the data
+        - method: method to handle missing data, either 'exclude' or 'impute'. Default is 'exclude'.
+                  If 'exclude', any rows with missing values will be excluded from analysis.
+                  If 'impute', missing values will be imputed with the specified value.
+        - value: value to impute missing data with. Only used if method is set to 'impute'. Default is None.
     
     Returns:
-        - range_values: tuple (min_value, max_value)
+        - pd.DataFrame: Dataframe after handling missing data
+    """
+    
+   return df.dropna() if method == 'exclude' else df.fillna(value)
+
+
+def handle_infinite_data(df, method='exclude'):
    """
-   
-   min_value = df[column_name].min()
-   max_value = df[column_name].max()
-    
-   range_values = (min_value, max_value)
-   return range_values
+   Function to handle infinite data by excluding or imputing values.
 
+   Parameters:
+       - df: pandas DataFrame
+       - method: str, optional (default='exclude')
 
-
-def calculate_minimum(dataframe, column_name):
-    """
-     Calculates the minimum value in a column of a pandas dataframe.
-
-     Parameters:
-         - dataframe: pandas dataframe
-         - column_name: str, name of the column in the dataframe
-
-     Returns:
-         - minimum_value: float or int, the minimum value in the column
-     """
-     
-     minimum_value = dataframe[column_name].min()
-     return minimum_value
-
-
-
-def calculate_max_value(df, column_name):
-    """
-    Function to calculate the maximum value in a column of a pandas dataframe.
-    
-    Parameters:
-        - df (pd.DataFrame): Input pandas dataframe.
-        - column_name (str): Name of the column to calculate the maximum value from.
-    
-    Returns:
-        max_value: Maximum value in the specified column.
+   Returns:
+       - result: pandas DataFrame
    """
+
+   if method == 'exclude':
+       result = df.replace([np.inf, -np.inf], np.nan).dropna()
+   elif method == 'impute':
+       result = df.replace([np.inf, -np.inf], np.nan)
+       result.fillna(result.mean(), inplace=True)
+   else:
+       raise ValueError("Invalid method. Please choose 'exclude' or 'impute'.")
    
-   max_value = df[column_name].max()
-   
-   return max_value
+   return result
 
 
-
-def count_non_null_values(df, column_name):
-    """
-    Calculate the count of non-null values in a column of a pandas dataframe.
-
-    Parameters:
-        - df (pandas.DataFrame): The input dataframe.
-        - column_name (str): The name of the column to calculate the count for.
-
-    Returns:
-        - int: The count of non-null values in the specified column.
+def remove_null_columns(df):
    """
-   
-   return df[column_name].count()
+   Drop columns with any null values
 
+   Parameters:
+       - df (pd.DataFrame): Input Dataframe
 
-
-def calculate_null_count(df, column_name):
-    """
-    Calculates the count of null values in a column of a pandas dataframe.
-
-    Parameters:
-        - df (pandas.DataFrame): The input dataframe.
-        - column_name (str): The name of the column to calculate the null count for.
-
-    Returns:
-        int: The count of null values in the specified column.
+   Returns:
+       pd.DataFrame: Dataframe without null columns
    """
+
+   return df.dropna(axis=1)
+
+
+def remove_trivial_columns(df):
+   """
+   Remove trivial columns from the dataframe.
+
+   Parameters:
+       - df (pd.DataFrame): Input Dataframe
+
+   Returns:
+       pd.DataFrame: Dataframe without trivial columns
+   """
+
+   return df.loc[:, df.nunique() > 1]
+
+
+def calculate_category_count(column):
+   """
+   Calculate count of categories in a given column
+
+   Parameters:
+      - column(pd.Series): Column from which categories counts need calculated
+
+     Returns:
+
+      pd.Series : Series having count values   
+
+  """
+
+  return  column.value_counts()
+
+
+def calculate_mode(df):
+  """
+  Function to calculate mode for given dataframe
+
+  Parameters:
+
+     pd.DataFrame : Given Input 
+
+  Returns : 
+     
+     pd.Series : Series having mode 
    
-  return df[column_name].isnull().sum()
-
+  """
 
+  return  df.mode()
 
-def calculate_unique_count(dataframe, column_name):
-    """
-     Calculate the count of unique values in a column of a pandas dataframe.
-    
-     Parameters:
-         - dataframe: The input pandas dataframe.
-         - column_name: The name of the column to calculate the count for.
-    
-     Returns:
-         The count of unique values in the specified column.
-     """
-     
-     return dataframe[column_name].nunique()
-
-
-
-def count_trivial_values(column):
-    """
-     Calculates the count of trivial values (e.g., all zeros or all ones) in a column.
-    
-     Parameters:
-         column (pandas.Series): The column to calculate the count of trivial values for.
-    
-     Returns:
-         int: The count of trivial values in the column.
-     """
-     
-     # Check if all values in the column are either 0 or 1
-     if set(column.unique()) == {0, 1}:
-         return column.value_counts().min()
-     else:
-         return 0
-
-
-
-def calculate_missing_values(df, column):
-    return df[column].isnull().sum()
-
-
-
-def count_infinite_values(df, column_name):
-    """
-     Calculates the count of infinite values in a column of a pandas dataframe.
-    
-     Parameters:
-         - df: pandas.DataFrame
-             The input dataframe.
-         - column_name: str
-             The name of the column to calculate the count of infinite values from.
-    
-     Returns:
-         - int: The count of infinite values in the specified column.
-    """
-    
-    column = df[column_name]
-    count = np.isinf(column).sum()
-    return count
-
-
-
-def check_missing_values(df):
-    """
-     Function to check if any missing values exist in a dataframe.
-
-     Parameters:
-         df (pandas.DataFrame): The input dataframe.
-
-     Returns:
-         bool: True if missing values exist, False otherwise.
-     """
-     
-     return df.isnull().values.any()
-
-
-
-def check_infinite_values(df):
-    """
-     Function to check if any infinite values exist in a dataframe.
-     
-     Parameters:
-         df: pandas dataframe
-     
-     Returns:
-         True if any infinite values exist, False otherwise.
-     """
-     
-     return np.any(np.isinf(df.values))
-
-
-
-def handle_missing_values_drop(df):
-    # Drop rows with any missing values
-    df.dropna(inplace=True)
-
-# Usage:
-handle_missing_values_drop(df)
-
 
+def calculate_median(df):
+  """
+  Function to calculate median for given dataframe
 
-def handle_infinite_values(dataframe, method='drop'):
-    """
-    Function to handle infinite values in a pandas dataframe.
-    
-    Parameters:
-        - dataframe: pandas DataFrame
-            Input dataframe with categorical data.
-        - method: str, optional (default='drop')
-            Method to handle infinite values. Possible options are:
-            - 'drop': Drop rows containing infinite values.
-            - 'impute_max': Impute infinite values with the maximum value of the column.
-            - 'impute_min': Impute infinite values with the minimum value of the column.
-            - 'impute_non_infinite': Impute infinite values with non-infinite values of the column.
-    
-    Returns:
-        Pandas DataFrame with infinite values handled according to the specified method.
-    """
-    
-    if method == 'drop':
-        # Drop rows containing infinite values
-        dataframe = dataframe.replace([np.inf, -np.inf], np.nan)
-        dataframe = dataframe.dropna()
-        
-    elif method == 'impute_max':
-        # Impute infinite values with maximum value of each column
-        dataframe = dataframe.replace([np.inf, -np.inf], np.nan)
-        max_values = dataframe.max()
-        dataframe = dataframe.fillna(max_values)
-        
-    elif method == 'impute_min':
-        # Impute infinite values with minimum value of each column
-        dataframe = dataframe.replace([np.inf, -np.inf], np.nan)
-        min_values = dataframe.min()
-        dataframe = dataframe.fillna(min_values)
-        
-    elif method == 'impute_non_infinite':
-        # Impute infinite values with non-infinite values of each column
-        dataframe = dataframe.replace([np.inf, -np.inf], np.nan)
-        non_infinite_values = dataframe[~dataframe.isin([np.nan, np.inf, -np.inf])].dropna()
-        dataframe = dataframe.fillna(non_infinite_values)
-        
-    return dataframe
-
-
-
-def handle_null_columns(df, replace_with):
-    """
-     Function to handle null columns by replacing them with constant values.
-
-     Parameters:
-     - df: pandas DataFrame - Input DataFrame
-     - replace_with: any - The value to replace null values with
+  Parameter :
 
-     Returns:
-     - pandas DataFrame - DataFrame with null columns replaced
-     """
+     pd.dataframe : Given input 
 
-     # Replace null values with the specified value
-     df_filled = df.fillna(replace_with)
+  Returns :
 
-     return df_filled
+     pd.Series : Series having median 
+  
+  """
 
+return  df.median()
 
 
-def handle_trivial_columns(dataframe, constant_value):
-    """
-    Handle trivial columns by replacing them with a constant value.
+def calculate_mean(df):
 
-    Parameters:
-    dataframe (pandas.DataFrame): Input dataframe.
-    constant_value: Value to replace trivial columns with.
+"""
+Function to Calculate mean for given dataframe 
 
-    Returns:
-    pandas.DataFrame: DataFrame with trivial columns replaced.
-    """
-    
-    return dataframe.fillna(constant_value)
+Parameters:
 
+pd.dataframe : Given input 
 
+Returns :
 
-def handle_duplicate_columns(df, merge=True):
-    """
-     Function to handle duplicate columns by either dropping or merging into one unique column.
+pd.series : Series having mean 
 
-     Parameters:
-         - df: pandas DataFrame
-             Input dataframe with duplicate columns.
-         - merge: bool, default=True
-             Flag to indicate whether to merge duplicate columns into one or drop them.
+"""
 
-     Returns:
-         - df: pandas DataFrame
-             Updated dataframe with no duplicate columns.
-     """
-     
-     if merge:
-         # Merge duplicate columns into one
-         df = df.groupby(level=0, axis=1).first()
-     else:
-         # Drop duplicate columns
-         df = df.loc[:, ~df.columns.duplicated()]
-     
-     return df
+return  df.mean()
 
 
 
-def calculate_chi_square_test(dataframe, column1, column2):
-    # Select the two columns from the dataframe
-    df = dataframe[[column1, column2]]
 
-    # Calculate the contingency table
-    contingency_table = pd.crosstab(df[column1], df[column2])
+def calculate_std(df):
 
-    # Perform the chi-square test
-    chi2, p_value, dof, expected = chi2_contingency(contingency_table)
+"""
+Function to Calculate standard deviation for given dataframes 
 
-    return chi2, p_value, dof, expected
+Parameters :
 
+pd.dataframe : Given input 
 
 
-def calculate_chi_square_goodness_of_fit(df, column):
-    """
-     Calculate the chi-square goodness-of-fit test for a single categorical column in a pandas dataframe.
+Returns :
 
-     Parameters:
-         - df (pandas.DataFrame): Input dataframe.
-         - column (str): Name of the categorical column to perform the test on.
 
-     Returns:
-         tuple: A tuple containing the chi-square statistic, p-value, degrees of freedom, and expected frequencies.
-     """
-     
-     # Filter out missing and infinite data
-     filtered_df = df[column].replace([np.inf, -np.inf], np.nan).dropna()
+pd.series : Series having standard deviation 
 
-     # Get observed frequencies
-     observed_frequencies = filtered_df.value_counts()
+"""
 
-     # Calculate expected frequencies using uniform distribution assumption
-     expected_frequencies = pd.Series(1 / len(observed_frequencies), index=observed_frequencies.index) * len(filtered_df)
+return  df.std()
 
-     # Perform chi-square test
-     chi2_statistic, p_value = chi2_contingency(pd.concat([observed_frequencies, expected_frequencies], axis=1))[:2]
 
-     # Calculate degrees of freedom
-     degrees_of_freedom = len(observed_frequencies) - 1
 
-     return chi2_statistic, p_value, degrees_of_freedom, expected_frequencies
 
+def calculate_variance(df):
 
+"""
+Function to Calculate variance for given dataframes 
 
-def calculate_fishers_exact(df, column1, column2):
-    contingency_table = pd.crosstab(df[column1], df[column2])
-    odds_ratio, p_value = fisher_exact(contingency_table)
-    return odds_ratio, p_value
 
+Parameters:
 
+pd.dataframes : Given Input 
 
-def calculate_g_test(dataframe, column1, column2):
-    contingency_table = pd.crosstab(dataframe[column1], dataframe[column2])
-    _, p_value, _, _ = chi2_contingency(contingency_table)
-    return p_value
-
-
-umpy as np
-import pandas as pd
-from scipy.stats import chi2_contingency
+Returns:
 
-def cramers_v(column1, column2):
-    contingency_table = pd.crosstab(column1, column2)
-    chi2, _, _, _ = chi2_contingency(contingency_table)
-    n = len(column1)
-    r, k = contingency_table.shape
-    v = np.sqrt(chi2 / (n * min(r-1, k-1)))
-    return v
+pd.Series : Series having variance 
 
 
+"""
 
-import pandas as pd
+return(variance)
 
-def calculate_contingency_table(df, col1, col2):
-    contingency_table = pd.crosstab(df[col1], df[col2])
-    return contingency_table
 
-# Example usage:
-# df is the pandas dataframe
-# col1 and col2 are the names of the two categorical columns
-contingency_table = calculate_contingency_table(df, 'column1', 'column2')
-print(contingency_table
+ def calculate_range(df):
 
+"""
+Calculate range for given dataframes 
 
-import pandas as pd
-import matplotlib.pyplot as plt
 
-def visualize_category_distribution(df, column):
-    """
-     Visualize the distribution of categories in a column using a bar plot.
-    
-     Parameters:
-         df (pandas.DataFrame): The input dataframe.
-         column (str): The name of the column to analyze.
-     """
-     
-     df[column].value_counts().plot(kind='bar')
-     plt.xlabel(column)
-     plt.ylabel('Count')
-     plt.title('Category Distribution')
-     plt.show()
+Parameters:
 
+pd.dataframes : Given inputs 
 
-andas as pd
-import matplotlib.pyplot as plt
-from statsmodels.graphics.mosaicplot import mosaic
+Returns :
 
-def visualize_mosaic_plot(df, x, y):
-    """
-    Visualizes the relationship between two categorical variables using a mosaic plot.
+Dictionary having ranges   
 
-    Parameters:
-        df (pandas.DataFrame): The input dataframe containing the categorical variables.
-        x (str): The name of the column representing the first categorical variable.
-        y (str): The name of the column representing the second categorical variable.
-
-    Returns:
-        None
-    """
-    # Create a cross-tabulation of the two variables
-    crosstab = pd.crosstab(df[x], df[y])
-
-    # Calculate the proportions for each cell in the mosaic plot
-    proportions = crosstab / crosstab.values.sum()
-
-    # Create a mosaic plot
-    mosaic(proportions.stack(), ax=plt.gca())
+"""
 
-    # Set labels for x-axis and y-axis
-    plt.xlabel(x)
-    plt.ylabel(y)
 
-    # Show the plot
-    plt.show()
+column_ranges={}
 
+for col in range(df.columns):
 
-import pandas as pd
+if(df[col].dtype.name=='category') :
 
-def calculate_entropy(dataframe, column_name):
-    # Get the values in the specified column
-    column_values = dataframe[column_name]
-    
-    # Count the frequency of each unique value in the column
-    value_counts = column_values.value_counts()
-    
-    # Calculate the total number of samples
-    total_samples = len(column_values)
-    
-    # Calculate the probabilities of each unique value
-    probabilities = value_counts / total_samples
-    
-    # Calculate the entropy using the formula: -sum(p * log2(p))
-    entropy = -np.sum(probabilities * np.log2(probabilities))
-    
-    return entropy
+column_ranges[col]=len(dataframe[col].unique())
 
+return(column_ranges)
 
 
-import pandas as pd
 
-def calculate_gini_index(column):
-    # Calculate the total count of values in the column
-    total_count = column.count()
-
-    # Calculate the frequency of each unique value in the column
-    value_counts = column.value_counts()
 
-    # Calculate the probability of each unique value
-    probabilities = value_counts / total_count
-
-    # Calculate the Gini index
-    gini_index = 1 - sum(probabilities ** 2)
-
-    return gini_index
+ def calculate_column_min(DF):
 
+"""
+Calculate minimum value for given dataframes 
 
 
-import pandas as pd
+parameters:
 
-def calculate_concentration_ratio(dataframe, column_name):
-     # Check if the column exists in the dataframe
-     if column_name not in dataframe.columns:
-         raise ValueError(f"Column '{column_name}' does not exist in the dataframe.")
-     
-     # Drop rows with missing or infinite values
-     clean_dataframe = dataframe.dropna(subset=[column_name]).replace([np.inf, -np.inf], np.nan)
-     
-     # Calculate total count of non-null values in the column
-     total_count = clean_dataframe[column_name].count()
-     
-     # Calculate counts for each unique value in the column
-     value_counts = clean_dataframe[column_name].value_counts()
-     
-     # Calculate concentration ratio
-     concentration_ratio = value_counts.max() / total_count
-     
-     return concentration_ratio
-
-
-andas as pd
-import numpy as np
-
-def diversity_index(column):
-    """
-    Calculate the diversity index of a categorical column.
-    
-    Parameters:
-    - column: pandas Series representing the categorical column
-    
-    Returns:
-    - diversity index value
-    """
-    
-    # Count the frequency of each category in the column
-    frequencies = column.value_counts()
-
-    # Calculate the total number of categories
-    total_categories = len(frequencies)
-
-    # Calculate the probability of each category
-    probabilities = frequencies / len(column)
-
-    # Calculate the diversity index using Shannon's entropy formula
-    diversity_index = -np.sum(probabilities * np.log2(probabilities))
-
-    return diversity_inde
-
-
-import pandas as pd
-
-def calculate_simpsons_index(df, column_name):
-     # Calculate the frequency counts of each category in the column
-     counts = df[column_name].value_counts()
-     
-     # Calculate the total number of observations
-     total_count = counts.sum()
-     
-     # Calculate the probabilities of each category
-     probabilities = counts / total_count
-     
-     # Calculate the Simpson's Index of Diversity
-     simpsons_index = 1 / sum(probabilities ** 2)
-     
-     return simpsons_index
-
-
-
-import pandas as pd
-from scipy.spatial.distance import jaccard
-
-def calculate_jaccard_similarity(df, column1, column2):
-    """
-    Calculate the Jaccard index of similarity between two categorical columns in a pandas DataFrame.
-
-    Parameters:
-        - df (pandas.DataFrame): Input DataFrame containing the two categorical columns.
-        - column1 (str): Name of the first categorical column.
-        - column2 (str): Name of the second categorical column.
-
-    Returns:
-        float: The Jaccard index of similarity between the two categorical columns.
-    """
-    # Extract the two columns from the DataFrame
-    series1 = df[column1]
-    series2 = df[column2]
-
-    # Convert the series into sets for calculating Jaccard index
-    set1 = set(series1)
-    set2 = set(series2)
-
-    # Calculate the Jaccard index of similarity
-    jaccard_index = 1 - jaccard(set1, set2)
-
-    return jaccard_index
-
-
-andas as pd
-import scipy.stats as stats
-
-def perform_anova(dataframe, columns):
-    """
-     Perform one-way analysis of variance (ANOVA) for multiple categorical columns in a pandas dataframe.
-    
-     Parameters:
-         - dataframe: pandas DataFrame containing the categorical data
-         - columns: list of column names to perform ANOVA on
-        
-     Returns:
-         - anova_results: pandas DataFrame containing the ANOVA results for each column
-     """
-     
-     anova_results = pd.DataFrame(columns=['Column', 'F-statistic', 'p-value'])
-     
-     for column in columns:
-         # Drop rows with missing or infinite values
-         cleaned_data = dataframe.dropna(subset=[column]).replace([np.inf, -np.inf], np.nan)
+pd.dataframes : Given inputs 
+
+
+Returns :
+
+PD.series having minimum value 
+
+
+"""
+
+return(DF.min(axis=0))
+
+
+
+ def Calculate_max(Df):
+
+"""
+Calculate maximum value Of giveN DATAFRAMES
+
+
+parameters:
+
+
+Pd.dataframes : Givne inputs
+
+
+Returns:
+
+
+Pd.series Having Maximum Value
+
+  
+"""
+
+RETURN Df.MAX()
+
+
+
+
+ def Calculate_quartiles(Df):
+
+"""
+Calculate Quartiles Of GiveN DATAFRAMES
+
+
+parameters:
+
+
+Pd.dataframes : Givne inputs
+
+
+Returns:
+
+
+Pd.series Having Quartiles
+
+  
+"""
+
+
+quartiles=df.quantile([0.25,0.5,0.75])
+
+return quartiles
+
+
+
+ def Calculate_interquartile_range(Df):
+
+"""
+Calculate Interquartile Range For GiveN DATAFRAMES
+
+
+parameters:
+
+
+Pd.dataframes : Givne inputs
+
+
+Returns:
+
+
+Pd.series Having Interquartile_range
+
+  
+"""
+
+iqr_df=pd.dataframe(columns=['columns','Interquartile_range'])
+
+for col in Df.columns():
+
+try :
          
-         # Perform ANOVA test
-         f_statistic, p_value = stats.f_oneway(*[cleaned_data[column][cleaned_data[column] == category] 
-                                                 for category in cleaned_data[column].unique()])
-         
-         anova_results = anova_results.append({'Column': column, 'F-statistic': f_statistic, 'p-value': p_value}, 
-                                              ignore_index=True)
+      Data= DF[col].replace([np.inf,-np.inf],np.nan).dropna()
+
+      iqr=np.percentile(data,75)-np.percentile(data,25)
+
+      iqr_df=iqr_df.append({'Column':col,'Interquartile Range':iqr},ignore_index=True)
+
+except :
      
-     return anova_result
+pass
+
+return iqr_df
 
 
-import statsmodels.stats.multicomp as mc
 
-def perform_tukeyhsd(dataframe, target_column):
-    # Extract the relevant data for analysis
-    groups = dataframe[target_column]
-    data = dataframe.drop(target_column, axis=1)
 
-    # Perform ANOVA to obtain F-statistic and p-value
-    fvalue, pvalue = stats.f_oneway(*data.values.T)
+ def Calculate_skewness(Df):
 
-    # Perform Tukey HSD test with Bonferroni correction
-    mc_results = mc.pairwise_tukeyhsd(data.values.ravel(), groups.values, alpha=0.05)
-    
-    return mc_results.summary(
+"""
+Calculate Skewness For GiveN DATAFRAMES
+
+
+parameters:
+
+
+Pd.dataframes:GivNe inputs 
+
+
+returns :
+
+ Pd.series Having skewness
+   
+"""  
+
+return Df.apply(lambda x:skew(x.dropna()))
+
+
+
+ def Calculate_kurtosis(Df):
+
+"""
+Calculate Kurtosis For GiveN DATAFRAMES
+
+
+parameters:
+
+
+Pd.dataframes:GivNe inputs 
+
+
+returns :
+
+ Pd.series Having kurtosis
+   
+"""  
+
+
+Kurtosis_values=[]
+for cols in Df.columns():
+kurtosis_value=stats.kurtosis(Df[cols],nan_policy="omit")
+kurtosi_values.append(kurtosis_value)
+result=pd.dataframe({"Column":Df.columns,"Kurtosi":Kurtosi_values})
+return(result)
+
+
+

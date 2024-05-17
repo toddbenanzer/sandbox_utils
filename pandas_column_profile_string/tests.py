@@ -1,435 +1,126 @@
-andas as pd
+
+import pandas as pd
 import pytest
 
+from my_module import (
+    check_if_dataframe,
+    is_string_column,
+    count_non_missing_values,
+    calculate_missing_values,
+    count_empty_strings,
+    calculate_unique_count,
+    calculate_most_common_values,
+    calculate_missing_prevalence,
+    calculate_empty_string_prevalence,
+    calculate_min_string_length,
+    calculate_max_string_length,
+    calculate_average_string_length,
+    calculate_median_string_length,
+    calculate_mode_string_length,
+    calculate_string_length_std,
+    calculate_variance,
+    calculate_string_length_quantiles,
+    check_null_columns,
+    check_trivial_column,
+    handle_missing_data,
+    handle_infinite_data,
+    remove_rows_with_empty_strings,
+    filter_rows,
+    normalize_string_lengths,
+    convert_to_lowercase, 
+    convert_column_to_uppercase, 
+    calculate_entropy, 
+    calculate_gini_index, 
+    calculate_jaccard_similarity, 
+    calculate_cosine_similarity, 
+    calculate_levenshtein_distance, 
+    hamming_distance, 
+    calculate_jaro_winkler_distance, 
+)
+
+def test_check_if_dataframe_with_dataframe():
+    df = pd.DataFrame({'col1': [1, 2, 3], 'col2': ['a', 'b', 'c']})
+    assert check_if_dataframe(df) == True
+
+def test_check_if_dataframe_with_non_dataframe():
+    non_df = [1, 2, 3]
+    assert check_if_dataframe(non_df) == False
+
+def test_check_if_dataframe_with_none():
+    assert check_if_dataframe(None) == False
+
+def test_check_if_dataframe_with_empty_dataframe():
+    empty_df = pd.DataFrame()
+    assert check_if_dataframe(empty_df) == True
+
 @pytest.fixture
-def sample_dataframe():
-    # Create a sample dataframe with missing values
-    data = {'A': [1, 2, None, 4, 5],
-            'B': [None, 2, 3, None, 5],
-            'C': [1, 2, 3, 4, None]}
-    df = pd.DataFrame(data)
-    return df
+def sample_column():
+    return pd.Series(['a', 'b', 'c'])
 
-def test_count_nonempty_strings(sample_dataframe):
-    # Test with a column that has non-empty strings
-    column = sample_dataframe['A']
-    assert count_nonempty_strings(column) == 5
+def test_is_string_column(sample_column):
+    assert is_string_column(sample_column) == True
 
-    # Test with a column that has empty strings
-    column = sample_dataframe['B']
-    assert count_nonempty_strings(column) == 2
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert count_nonempty_strings(column) == 0
-
-    # Test with a column that has null values
-    column = sample_dataframe['C']
-    assert count_nonempty_strings(column) == 3
-
-
-def test_calculate_percentage_empty_strings(sample_dataframe):
-    # Test with a column that has no empty strings
-    column = sample_dataframe['A']
-    assert calculate_percentage_empty_strings(column) == 0.0
-
-    # Test with a column that has all empty strings
-    column = sample_dataframe['B']
-    assert calculate_percentage_empty_strings(column) == 100.0
-
-    # Test with a column that has a mix of empty and non-empty strings
-    column = sample_dataframe['C']
-    assert calculate_percentage_empty_strings(column) == 20.0
-
-
-def test_calculate_min_string_length(sample_dataframe):
-     # Test with a dataframe that has non-empty string values
-     df = pd.DataFrame({'Column1': ['Apple', 'Banana', 'Cherry']})
-     assert calculate_min_string_length(df['Column1']) == 5
-
-     # Test with a dataframe that has empty string values
-     df = pd.DataFrame({'Column1': ['', '', '']})
-     assert calculate_min_string_length(df['Column1']) == 0
-
-     # Test with a dataframe that has null values
-     df = pd.DataFrame({'Column1': [None, None, None]})
-     assert calculate_min_string_length(df['Column1']) is None
-
-     # Test with an empty dataframe
-     df = pd.DataFrame()
-     assert calculate_min_string_length(df['Column1']) is None
-
-
-def test_calculate_max_string_length(sample_dataframe):
-    # Test with a dataframe that has non-empty string values
-    df = pd.DataFrame({'Column1': ['Apple', 'Banana', 'Cherry']})
-    assert calculate_max_string_length(df['Column1']) == 6
-
-    # Test with a dataframe that has empty string values
-    df = pd.DataFrame({'Column1': ['', '', '']})
-    assert calculate_max_string_length(df['Column1']) == 0
-
-    # Test with a dataframe that has null values
-    df = pd.DataFrame({'Column1': [None, None, None]})
-    assert calculate_max_string_length(df['Column1']) is None
-
-    # Test with an empty dataframe
-    df = pd.DataFrame()
-    assert calculate_max_string_length(df['Column1']) is None
-
-
-def test_calculate_average_string_length(sample_dataframe):
-    # Test with a column that has non-empty strings
-    column = sample_dataframe['A']
-    assert calculate_average_string_length(column) == 5.666666666666667
-
-    # Test with a column that has empty strings
-    column = sample_dataframe['B']
-    assert calculate_average_string_length(column) == 0.0
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert calculate_average_string_length(column) == 0.0
-
-    # Test with a column that has null values
-    column = sample_dataframe['C']
-    assert calculate_average_string_length(column) == pytest.approx(2.0)
-
-
-def test_calculate_non_empty_percentage(sample_dataframe):
-    # Test with a column that has non-empty strings
-    column = sample_dataframe['A']
-    assert calculate_non_empty_percentage(column) == 100.0
-
-    # Test with a column that has empty strings
-    column = sample_dataframe['B']
-    assert calculate_non_empty_percentage(column) == 60.0
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert calculate_non_empty_percentage(column) == 0.0
-
-    # Test with a column that has null values
-    column = sample_dataframe['C']
-    assert calculate_non_empty_percentage(column) == pytest.approx(80.0)
-
-
-def test_count_unique_values():
-     # Create test data
-     data = {'Column1': ['Apple', 'Banana', 'Apple', 'Orange', 'Banana']}
-     df = pd.DataFrame(data)
+def test_is_string_column_nonstring(sample_column):
+    nonstring_column = pd.Series([1, 2, 3])
     
-     # Call the function under test
-     unique_count = count_unique_values(df['Column1'])
+def test_count_non_missing_values():
     
-     # Check the result
-     assert unique_count == 3
-
-
-def test_calculate_most_common_values(sample_dataframe):
-    # Test with a column that has non-empty values
-    column = sample_dataframe['A']
-    assert calculate_most_common_values(column) == [5, 4, None, 2, 1]
-
-    # Test with a column that has empty values
-    column = sample_dataframe['B']
-    assert calculate_most_common_values(column) == [5, 3, None, 2]
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert calculate_most_common_values(column) == []
-
-    # Test with a column that has null values
-    column = sample_dataframe['C']
-    assert calculate_most_common_values(column) == [4, 3, 2, None, 1]
-
-
-def test_calculate_missing_prevalence(sample_dataframe):
-    # Test with a column that has non-empty values
-    column = sample_dataframe['A']
-    assert calculate_missing_prevalence(column) == 40.0
-
-    # Test with a column that has no missing values
-    column = sample_dataframe['C']
-    assert calculate_missing_prevalence(column) == 0.0
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert calculate_missing_prevalence(column) == 0.0
-
-    # Test with a column that has all missing values
-    column = sample_dataframe['B']
-    assert calculate_missing_prevalence(column) == 60.0
-
-
-def test_calculate_empty_string_prevalence(sample_dataframe):
-     # Test with a column that has non-empty values
-     column = sample_dataframe['A']
-     assert calculate_empty_string_prevalence(column) == 0.0
-
-     # Test with a column that has no empty strings
-     column = sample_dataframe['C']
-     assert calculate_empty_string_prevalence(column) == 0.0
-
-     # Test with an empty column
-     column = pd.Series([])
-     with pytest.raises(ValueError):
-         calculate_empty_string_prevalence(column)
-
-     # Test with a column that has empty strings
-     column = sample_dataframe['B']
-     assert calculate_empty_string_prevalence(column) == 40.0
-
-
-def test_calculate_min_string_length(sample_dataframe):
-    # Test with a dataframe that has non-empty string values
-    df = pd.DataFrame({'Column1': ['Apple', 'Banana', 'Cherry']})
-    assert calculate_min_string_length(df['Column1']) == 5
-
-    # Test with a dataframe that has empty string values
-    df = pd.DataFrame({'Column1': ['', '', '']})
-    assert calculate_min_string_length(df['Column1']) == 0
-
-    # Test with a dataframe that has null values
-    df = pd.DataFrame({'Column1': [None, None, None]})
-    assert calculate_min_string_length(df['Column1']) is None
-
-    # Test with an empty dataframe
-    df = pd.DataFrame()
-    assert calculate_min_string_length(df['Column1']) is None
-
-
-def test_calculate_max_string_length(sample_dataframe):
-    # Test with a dataframe that has non-empty string values
-    df = pd.DataFrame({'Column1': ['Apple', 'Banana', 'Cherry']})
-    assert calculate_max_string_length(df['Column1']) == 6
-
-    # Test with a dataframe that has empty string values
-    df = pd.DataFrame({'Column1': ['', '', '']})
-    assert calculate_max_string_length(df['Column1']) == 0
-
-    # Test with a dataframe that has null values
-    df = pd.DataFrame({'Column1': [None, None, None]})
-    assert calculate_max_string_length(df['Column1']) is None
-
-    # Test with an empty dataframe
-    df = pd.DataFrame()
-    assert calculate_max_string_length(df['Column1']) is None
-
-
-def test_calculate_average_string_length(sample_dataframe):
-     # Test with a column that has non-empty strings
-     column = sample_dataframe['A']
-     assert calculate_average_string_length(column) == 5.666666666666667
-
-     # Test with a column that has empty strings
-     column = sample_dataframe['B']
-     assert calculate_average_string_length(column) == 0.0
-
-     # Test with an empty column
-     column = pd.Series([])
-     assert calculate_average_string_length(column) == 0.0
-
-     # Test with a column that has null values
-     column = sample_dataframe['C']
-     assert calculate_average_string_length(column) == pytest.approx(2.0)
-
-
-def test_calculate_non_empty_percentage(sample_dataframe):
-    # Test with a column that has non-empty strings
-    column = sample_dataframe['A']
-    assert calculate_non_empty_percentage(column) == 100.0
-
-    # Test with a column that has empty strings
-    column = sample_dataframe['B']
-    assert calculate_non_empty_percentage(column) == 60.0
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert calculate_non_empty_percentage(column) == 0.0
-
-    # Test with a column that has null values
-    column = sample_dataframe['C']
-    assert calculate_non_empty_percentage(column) == pytest.approx(80.0)
-
-
-def test_count_unique_values():
-     # Create test data
-     data = {'Column1': ['Apple', 'Banana', 'Apple', 'Orange', 'Banana']}
-     df = pd.DataFrame(data)
+def test_calculate_missing_values():
     
-     # Call the function under test
-     unique_count = count_unique_values(df['Column1'])
+def test_count_empty_strings():
+
+@pytest.fixture
+def sample_data_frame():
     
-     # Check the result
-     assert unique_count == 3
-
-
-def test_calculate_most_common_values(sample_dataframe):
-    # Test with a column that has non-empty values
-    column = sample_dataframe['A']
-    assert calculate_most_common_values(column) == [5, 4, None, 2, 1]
-
-    # Test with a column that has empty values
-    column = sample_dataframe['B']
-    assert calculate_most_common_values(column) == [5, 3, None, 2]
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert calculate_most_common_values(column) == []
-
-    # Test with a column that has null values
-    column = sample_dataframe['C']
-    assert calculate_most_common_values(column) == [4, 3, 2, None, 1]
-
-
-def test_calculate_missing_prevalence(sample_dataframe):
-    # Test with a column that has non-empty values
-    column = sample_dataframe['A']
-    assert calculate_missing_prevalence(column) == 40.0
-
-    # Test with a column that has no missing values
-    column = sample_dataframe['C']
-    assert calculate_missing_prevalence(column) == 0.0
-
-    # Test with an empty column
-    column = pd.Series([])
-    assert calculate_missing_prevalence(column) == 0.0
-
-    # Test with a column that has all missing values
-    column = sample_dataframe['B']
-    assert calculate_missing_prevalence(column) == 60.0
-
-
-def test_calculate_empty_string_prevalence(sample_dataframe):
-     # Test with a column that has non-empty values
-     column = sample_dataframe['A']
-     assert calculate_empty_string_prevalence(column) == 0.0
-
-     # Test with a column that has no empty strings
-     column = sample_dataframe['C']
-     assert calculate_empty_string_prevalence(column) == 0.0
-
-     # Test with an empty column
-     column = pd.Series([])
-     with pytest.raises(ValueError):
-         calculate_empty_string_prevalence(column)
-
-     # Test with a column that has empty strings
-     column = sample_dataframe['B']
-     assert calculate_empty_string_prevalence(column) == 40.0
-
-
-def test_calculate_percentage_unique_values(sample_dataframe):
-    # Test with a dataframe that has non-empty string values
-    df = pd.DataFrame({'Column1': ['Apple', 'Banana', 'Cherry']})
-    assert calculate_percentage_unique_values(df, 'Column1') == 100.0
-
-    # Test with a dataframe that has empty string values
-    df = pd.DataFrame({'Column1': ['', '', '']})
-    assert calculate_percentage_unique_values(df, 'Column1') == 0.0
-
-    # Test with a dataframe that has null values
-    df = pd.DataFrame({'Column1': [None, None, None]})
-    assert calculate_percentage_unique_values(df, 'Column1') == 0.0
-
-    # Test with an empty dataframe
-    df = pd.DataFrame()
-    assert calculate_percentage_unique_values(df, 'Column1') == 0.0
-
-
-def test_calculate_string_statistics(sample_dataframe):
-     # Test with a column that has non-empty string values
-     column = sample_dataframe['A']
-     result = calculate_string_statistics(column)
+def test_calculate_unique_count(sample_data_frame):
     
-     assert isinstance(result, dict)
-     assert 'min_length' in result
-     assert 'max_length' in result
-     assert 'avg_length' in result
-     assert 'most_common_values' in result
-     assert 'most_common_frequencies' in result
-     assert 'std_deviation' in result
-     assert 'median_length' in result
-     assert 'first_quartile' in result
-     assert 'third_quartile' in result
+def test_calculate_most_common_values(sample_data_frame):
 
-def test_calculate_string_statistics_empty_column():
-    # Test with an empty column
-    column = pd.Series([])
-    result = calculate_string_statistics(column)
-    
-    assert result is None
+@pytest.fixture
+def sample_series():
 
+def test_calculate_missing_prevalence_no_missing_values(sample_series):
 
-def test_calculate_string_statistics_all_missing_values():
-    # Test with a column that has all missing values
-    column = pd.Series([None, None, None])
-    result = calculate_string_statistics(column)
-    
-    assert result is None
+def test_calculate_empty_string_prevalence(sample_data_frame):
 
+@pytest.fixture
+def string_series():
 
-def test_calculate_string_statistics_valid_input():
-    # Test with a column that has valid input
-    column = pd.Series(['apple', 'banana', 'orange'])
-    result = calculate_string_statistics(column)
-    
-    assert isinstance(result, dict)
-    assert 'min_length' in result
-    assert 'max_length' in result
-    assert 'avg_length' in result
-    assert 'most_common_values' in result
-    assert 'most_common_frequencies' in result
-    assert 'std_deviation' in result
-    assert 'median_length' in result
-    assert 'first_quartile' in result
-    assert 'third_quartile' in result
+def test_calculate_min_string_length(string_series):
 
+@pytest.mark.parametrize(
+)
+@pytest.mark.parametrize(
+)
+@pytest.mark.parametrize(
+)
+@pytest.mark.parametrize(
+)
 
-def test_calculate_string_statistics_missing_values_removed():
-    # Test with a column that has missing values and non-missing values
-    column = pd.Series(['apple', None, 'banana'])
-    
-    result = calculate_string_statistics(column)
-    
-    assert isinstance(result, dict)
-    
-    # Check if missing values were removed from the column before calculating statistics
-    assert len(column.dropna()) == len(result['most_common_values'])
+@pytest.fixture(scope='module')
+):
+
+# Test case for an empty DataFrame
+@pytest.mark.parametrize("dataframe", [
+])
+
+# Test case for a DataFrame with no empty strings
+@pytest.mark.parametrize("dataframe", [
+])
+
+# Test case for a DataFrame with empty strings in some rows
+@pytest.mark.parametrize("dataframe", [
+])
+
+# Test case for a DataFrame with only empty strings in all rows
+@pytest.mark.parametrize("dataframe", [
+])
+
+# Test case for handling missing data in Series and DataFrames
+
+# Test case for handling infinite data in Series
+
+# Test for string length normalization
 
 
-def test_calculate_string_statistics_multiple_most_common_values():
-     # Test with a column that has multiple most common values
-     column = pd.Series(['apple', 'banana', 'banana', 'orange'])
-     result = calculate_string_statistics(column)
-    
-     assert isinstance(result, dict)
-    
-     # Check if the correct values and frequencies are returned for most common values
-     expected_most_common_values = ['banana']
-     expected_most_common_frequencies = [2]
-     assert result['most_common_values'] == expected_most_common_values
-     assert result['most_common_frequencies'] == expected_most_common_frequencies
-
-
-def test_calculate_string_statistics_statistical_measurements():
-     # Test with a column that has valid input
-     column = pd.Series(['apple', 'banana', 'orange'])
-     result = calculate_string_statistics(column)
-    
-     assert isinstance(result, dict)
-    
-     # Check if the statistical measurements are calculated correctly
-     assert result['std_deviation'] is not None
-     assert result['median_length'] is not None
-     assert result['first_quartile'] is not None
-     assert result['third_quartile'] is not None
-
-
-def test_calculate_string_statistics_no_statistical_measurements():
-     # Test with a column that has only one value
-     column = pd.Series(['apple'])
-     result = calculate_string_statistics(column)
-    
-     assert result is Non
+if __name__ == '__main__':

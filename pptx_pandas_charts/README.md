@@ -1,59 +1,101 @@
-```markdown
 # Overview
-This python script allows you to create a bar chart in a PowerPoint presentation using data from a pandas dataframe. The resulting PowerPoint file can be used for data visualization and presentation purposes.
+
+This package provides functions to convert dataframes into various types of charts in a PowerPoint presentation. The supported chart types are: bar chart, line chart, scatter plot, pie chart, area chart, stacked bar chart, stacked area chart, and stacked line chart. The package utilizes the pandas library for handling dataframes and the pptx library for creating PowerPoint presentations.
 
 # Usage
-To use this script, you need to have the following packages installed:
-- pandas (`pip install pandas`)
-- pptx (`pip install python-pptx`)
 
-The script defines a function `create_bar_chart(dataframe, title)` that takes two parameters:
-1. `dataframe`: The pandas dataframe containing the data for the bar chart. Each column in the dataframe represents a category, and each row represents a series of data.
-2. `title`: The title of the slide where the bar chart will be placed.
+To use this package, you need to have Python 3 installed along with the required dependencies: pandas and pptx. You can install these dependencies using pip:
 
-The function creates a blank PowerPoint presentation and adds a slide with a title and content layout. The provided `dataframe` is converted to `CategoryChartData`, and series data is added to the chart. Finally, a bar chart is added to the slide using the provided data.
+```bash
+pip install pandas pptx
+```
+
+Once the dependencies are installed, you can import the necessary functions from the package:
+
+```python
+from dataframe_to_pptcharts import dataframe_to_bar_chart, dataframe_to_line_chart, dataframe_to_scatter_plot,
+                                convert_dataframe_to_pie_chart, customize_x_axis_label, customize_y_axis_label
+```
+
+You can then use these functions to convert your dataframes into PowerPoint charts.
 
 # Examples
-Here's an example of how to use the script:
+
+Here are some examples of how to use the functions provided by this package:
+
+## Bar Chart
 
 ```python
 import pandas as pd
-from pptx import Presentation
-from pptx.util import Inches
-from pptx.chart.data import CategoryChartData
-from pptx.enum.chart import XL_CHART_TYPE
+from dataframe_to_pptcharts import dataframe_to_bar_chart
 
-def create_bar_chart(dataframe, title):
-    prs = Presentation()
-    slide_layout = prs.slide_layouts[1]
-    slide = prs.slides.add_slide(slide_layout)
-    shapes = slide.shapes
+df = pd.DataFrame({'Category': ['A', 'B', 'C'],
+                   'Value': [10, 20, 30]})
 
-    title_shape = shapes.title
-    title_shape.text = title
-
-    chart_data = CategoryChartData()
-    chart_data.categories = list(dataframe.columns)
-
-    for row in dataframe.itertuples(index=False):
-        chart_data.add_series(row._fields, list(row))
-
-    x, y, cx, cy = 0.1, 0.2, 6, 4.5
-    chart = shapes.add_chart(
-        XL_CHART_TYPE.BAR_CLUSTERED, x, y, cx, cy, chart_data
-    ).chart
-
-    prs.save("bar_chart.pptx")
-
-# Example usage
-data = {
-    'Category A': [10, 20, 30],
-    'Category B': [15, 25, 35],
-    'Category C': [5, 10, 15]
-}
-df = pd.DataFrame(data)
-create_bar_chart(df, "Example Bar Chart")
+presentation = dataframe_to_bar_chart(df, "Bar Chart Example")
+presentation.save("bar_chart.pptx")
 ```
 
-In this example, a pandas dataframe is created with three categories (`Category A`, `Category B`, `Category C`) and three series of data for each category. The `create_bar_chart` function is then called with the dataframe and a title for the slide. The resulting PowerPoint file will have a bar chart displaying the provided data.
+This will create a PowerPoint presentation with a single slide containing a bar chart representing the data in the dataframe.
+
+## Line Chart
+
+```python
+import pandas as pd
+from dataframe_to_pptcharts import dataframe_to_line_chart
+
+df = pd.DataFrame({'Year': [2019, 2020, 2021],
+                   'Sales': [1000, 2000, 1500],
+                   'Profit': [500, 1000, 800]})
+
+presentation = dataframe_to_line_chart(df, "Line Chart Example")
+presentation.save("line_chart.pptx")
 ```
+
+This will create a PowerPoint presentation with a single slide containing a line chart representing the data in the dataframe.
+
+## Scatter Plot
+
+```python
+import pandas as pd
+from dataframe_to_pptcharts import dataframe_to_scatter_plot
+
+df = pd.DataFrame({'x': [1, 2, 3],
+                   'y': [4, 5, 6]})
+
+presentation = dataframe_to_scatter_plot(df, "Scatter Plot Example")
+presentation.save("scatter_plot.pptx")
+```
+
+This will create a PowerPoint presentation with a single slide containing a scatter plot representing the data in the dataframe.
+
+## Pie Chart
+
+```python
+import pandas as pd
+from dataframe_to_pptcharts import convert_dataframe_to_pie_chart
+
+df = pd.DataFrame({'Category': ['A', 'B', 'C'],
+                   'Value': [10, 20, 30]})
+
+presentation = convert_dataframe_to_pie_chart(df, "Pie Chart Example")
+presentation.save("pie_chart.pptx")
+```
+
+This will create a PowerPoint presentation with a single slide containing a pie chart representing the data in the dataframe.
+
+## Customizing Axis Labels
+
+You can also customize the axis labels of the charts using the provided functions `customize_x_axis_label` and `customize_y_axis_label`.
+
+```python
+from dataframe_to_pptcharts import customize_x_axis_label, customize_y_axis_label
+
+# Customize x-axis label
+customize_x_axis_label(chart, "Year", font_size=12, font_color=(0x00, 0x00, 0x00))
+
+# Customize y-axis label
+customize_y_axis_label(chart, "Sales", font_size=14)
+```
+
+These functions allow you to set the text, font size, and font color of the axis labels of a given PowerPoint chart object.

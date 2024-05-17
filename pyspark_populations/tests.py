@@ -1,427 +1,223 @@
 
 import pytest
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
-from my_module import read_csv_file, read_data_from_database, define_population, overlap_analysis, calculate_profiles, export_to_csv, export_to_database, filter_dataset, group_datasets, aggregate_data, merge_datasets, calculate_overlap, filter_population, aggregate_profiles
+import os
+import shutil
 
-# Create a fixture to initialize a SparkSession for testing
+# Mock file path for testing
+file_path = "test.csv"
+
+@pytest.fixture(scope="session")
+def spark():
+    spark = SparkSession.builder.getOrCreate()
+    yield spark
+    spark.stop()
+
+def test_read_csv_to_dataframe(spark):
+    df = read_csv_to_dataframe(file_path)
+    
+    assert not df.isEmpty()
+    assert 'column1' in df.schema.fieldNames()
+    assert 'column2' in df.schema.fieldNames()
+    assert df.count() == 10
+    assert df.select('column1').dtypes[0][1] == 'integer'
+    assert df.filter(df.column2 == 'value').count() > 0
+
 @pytest.fixture(scope="session")
 def spark_session():
     spark = SparkSession.builder.getOrCreate()
     yield spark
     spark.stop()
 
-
-def test_read_csv_file(spark_session):
-    # Test case 1: Valid file path
-    file_path = "tests/data.csv"
-    df = read_csv_file(file_path)
-    assert isinstance(df, DataFrame)
-    assert df.count() == 10  # Assuming the data.csv contains 10 rows
+def test_read_json_file_valid(spark_session):
+    temp_dir = "./temp"
+    os.makedirs(temp_dir, exist_ok=True)
     
-    # Test case 2: Invalid file path
-    file_path = "tests/invalid.csv"
-    with pytest.raises(Exception):
-        df = read_csv_file(file_path)
+    temp_file_path = os.path.join(temp_dir, "test.json")
     
-    # Test case 3: Empty file path
-    file_path = ""
-    with pytest.raises(Exception):
-        df = read_csv_file(file_path)
+    try:
+        with open(temp_file_path, "w") as f:
+            f.write('{"name": "John", "age": 30}')
+        
+        df = read_json_file(temp_file_path)
+        
+        assert not df.isEmpty()
+        assert "name" in df.columns
+        assert "age" in df.columns
+        
+    finally:
+        shutil.rmtree(temp_dir)
+
+def test_read_json_file_invalid(spark_session):
+    temp_dir = "./temp"
+    os.makedirs(temp_dir, exist_ok=True)
     
-    # Test case 4: File path pointing to a non-CSV file
-    file_path = "tests/non_csv.txt"
-    with pytest.raises(Exception):
-        df = read_csv_file(file_path)
-
-
-def test_read_data_from_database(spark_session):
-    # Define test data
-    database_url = "jdbc:postgresql://localhost:5432/mydatabase"
-    table_name = "mytable"
-
-    # Call the function to read data from database
-    df = read_data_from_database(database_url, table_name)
-
-    # Verify that the DataFrame is not empty
-    assert df.count() > 0
-
-    # Verify that the DataFrame has the expected columns
-    expected_columns = ["col1", "col2", "col3"]
-    assert set(df.columns) == set(expected_columns)
-
-    # Verify that the DataFrame has the expected number of rows
-    expected_rows = 100
-    assert df.count() == expected_rows
-
-    # Add more assertions as needed based on your specific requirements
-
-
-def test_define_population(spark_session):
-    # Create a SparkSession
-    spark = SparkSession.builder.getOrCreate()
-
-    # Test case 1: Empty population
-    sql_query = "SELECT * FROM population WHERE 1=0"
-    result = define_population(sql_query)
-    assert result.count() == 0
-
-    # Test case 2: Non-empty population
-    sql_query = "SELECT * FROM population WHERE age >= 18"
-    result = define_population(sql_query)
-    assert result.count() > 0
-
-    # Test case 3: Invalid SQL query
-    sql_query = "SELECT * FROM invalid_table"
-    with pytest.raises(Exception):
-        define_population(sql_query)
-
-
-def test_overlap_analysis(spark_session):
-    # Create test DataFrame representing population 1
-    population1 = spark.createDataFrame([(1,), (2,), (3,), (4,), (5,)], ["individual_id"])
-
-    # Create test DataFrame representing population 2
-    population2 = spark.createDataFrame([(4,), (5,), (6,), (7,), (8,)], ["individual_id"])
-
-    # Call the overlap_analysis function
-    results_df = overlap_analysis(population1, population2)
-
-    # Check if the result DataFrame has the expected columns
-    assert set(results_df.columns) == set(["population1_count", "population2_count", "overlap_count",
-                                           "percentage_overlap_population1", "percentage_overlap_population2"])
-
-    # Check if the result DataFrame has the expected values
-    expected_values = [(5, 5, 2, 40.0, 40.0)]
-    assert results_df.collect() == expected_values
-
-    # Create another test DataFrame representing population 1 with duplicate individual ids
-    population1_duplicate_ids = spark.createDataFrame([(1,), (2,), (3,), (3,), (4,)], ["individual_id"])
-
-    # Call the overlap_analysis function with duplicate ids in population 1
-    results_df_duplicate_ids = overlap_analysis(population1_duplicate_ids, population2)
-
-    # Check if the result DataFrame has the expected values when there are duplicate ids in population 1
-    expected_values_duplicate_ids = [(4, 5, 2, 50.0, 40.0)]
-    assert results_df_duplicate_ids.collect() == expected_values_duplicate_ids
-
-
-def test_calculate_profiles(spark_session):
-    # Define sample population and metric queries
-    population_query = "SELECT * FROM population_data"
-    metric_queries = {
-        'metric1': "SELECT * FROM metric1_data",
-        'metric2': "SELECT * FROM metric2_data"
-    }
-
-    # Call the calculate_profiles function
-    profiles = calculate_profiles(population_query, metric_queries)
-
-    # Assert that the profiles dictionary is not empty
-    assert profiles
-
-    # Assert that each metric name has corresponding profile metrics
-    for metric_name in metric_queries.keys():
-        assert metric_name in profiles
-
-    # Assert that the profile metrics have expected columns
-    for profile_metrics in profiles.values():
-        assert 'population_group' in profile_metrics.columns
-        assert 'count(metric_column)' in profile_metrics.columns
-        assert 'sum(metric_column)' in profile_metrics.columns
-        assert 'avg(metric_column)' in profile_metrics.columns
-
-
-def test_export_to_csv(tmpdir):
-    # Create a temporary directory for file_path
-    file_path = os.path.join(str(tmpdir), "test.csv")
-
-    # Create a test dataset
-    test_data = [("John", 25), ("Alice", 30), ("Bob", 35)]
-    df = spark.createDataFrame(test_data, ["Name", "Age"])
-
-    # Call the export_to_csv function
-    export_to_csv(df, file_path)
-
-    # Check if the CSV file is created
-    assert os.path.exists(file_path)
-
-    # Check if the exported CSV file is not empty
-    assert os.path.getsize(file_path) > 0
-
-    # Check if the exported CSV file has correct content
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-        assert len(lines) == 4  # Including header row
-        assert lines[0].strip() == "Name,Age"
-        assert lines[1].strip() == "John,25"
-        assert lines[2].strip() == "Alice,30"
-        assert lines[3].strip() == "Bob,35"
-
-
-def test_export_to_csv_overwrite(tmpdir):
-    # Create a temporary directory for file_path
-    file_path = os.path.join(str(tmpdir), "test.csv")
-
-    # Create an existing CSV file
-    with open(file_path, "w") as f:
-        f.write("Existing File")
-
-    # Create a test dataset
-    test_data = [("John", 25), ("Alice", 30), ("Bob", 35)]
-    df = spark.createDataFrame(test_data, ["Name", "Age"])
-
-    # Call the export_to_csv function with mode="overwrite"
-    export_to_csv(df, file_path)
-
-    # Check if the CSV file is overwritten
-    with open(file_path, "r") as f:
-        content = f.read()
-        assert content != "Existing File"
-
-    # Check if the exported CSV file has correct content
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-        assert len(lines) == 4  # Including header row
-        assert lines[0].strip() == "Name,Age"
-        assert lines[1].strip() == "John,25"
-        assert lines[2].strip() == "Alice,30"
-        assert lines[3].strip() == "Bob,35"
-
-
-def test_export_to_database(tmpdir):
-    # Create a temporary directory to use as the database URL
-    database_url = f"jdbc:sqlite://{tmpdir}/test.db"
-
-    # Call the function with the test dataset and temporary database URL
-    export_to_database(test_dataset, database_url)
-
-    # Verify that the dataset was exported correctly by reading it from the database
-    exported_dataset = spark.read.format("jdbc").options(
-        url=database_url,
-        dbtable="target_table_name",
-        driver="org.sqlite.JDBC"
-        # Add any other required options for the specific database
-    ).load()
-
-    # Assert that the exported dataset is equal to the original test dataset
-    assert exported_dataset.collect() == test_dataset.collect()
-
-
-def test_filter_dataset(dataset):
-    # Test filtering with no conditions should return the original dataset
-    filtered_dataset = filter_dataset(dataset, [])
-    assert filtered_dataset == dataset
-
-
-def test_filter_dataset_with_single_condition(dataset):
-    # Test filtering with a single condition
-    condition = Condition('age', '>', 25)
-    filtered_dataset = filter_dataset(dataset, [condition])
-
-    # Expected result: Only rows with age > 25 should be returned
-    expected_result = Dataset()
-    expected_result.add_row({'name': 'Jane', 'age': 30})
-    expected_result.add_row({'name': 'Sam', 'age': 35})
-
-    assert filtered_dataset == expected_result
-
-
-def test_filter_dataset_with_multiple_conditions(dataset):
-    # Test filtering with multiple conditions
-    condition1 = Condition('age', '>', 25)
-    condition2 = Condition('name', '==', 'Sam')
-
-    filtered_dataset = filter_dataset(dataset, [condition1, condition2])
-
-    # Expected result: Only row with age > 25 and name == 'Sam' should be returned
-    expected_result = Dataset()
-    expected_result.add_row({'name': 'Sam', 'age': 35})
-
-    assert filtered_dataset == expected_result
-
-
-def test_filter_dataset_with_invalid_condition(dataset):
-    # Test filtering with an invalid condition (unsupported operator)
-    condition = Condition('age', '<>', 30)
-
-    with pytest.raises(ValueError):
-        filter_dataset(dataset, [condition])
-
-
-def test_group_datasets_by_single_column(spark_session):
-    # Create test DataFrame
-    data = [
-        ("Alice", 25, "New York"),
-        ("Bob", 30, "Los Angeles"),
-        ("Charlie", 35, "New York"),
-        ("Dave", 40, "Los Angeles")
-    ]
-    df = spark_session.createDataFrame(data, ["Name", "Age", "City"])
-
-    # Call the function to group the DataFrame by a single column
-    grouped_df = group_datasets(df, ["City"])
-
-    # Assert that grouped_df is of type 'pyspark.sql.GroupedData'
-    assert isinstance(grouped_df, pyspark.sql.GroupedData)
-
-
-def test_group_datasets_by_multiple_columns(spark_session):
-    # Create test DataFrame
-    data = [
-        ("Alice", 25, "New York"),
-        ("Bob", 30, "Los Angeles"),
-        ("Charlie", 35, "New York"),
-        ("Dave", 40, "Los Angeles")
-    ]
-    df = spark_session.createDataFrame(data, ["Name", "Age", "City"])
-
-    # Call the function to group the DataFrame by multiple columns
-    grouped_df = group_datasets(df, ["City", "Age"])
-
-    # Assert that grouped_df is of type 'pyspark.sql.GroupedData'
-    assert isinstance(grouped_df, pyspark.sql.GroupedData)
-
-
-def test_aggregate_data(spark_session):
-    # Create a test DataFrame
-    df = spark_session.createDataFrame([(1, "A", 10), (2, "B", 20), (1, "C", 30)], ["col1", "col2", "col3"])
-
-    # Define the expected output DataFrame
-    expected_df = spark_session.createDataFrame([(1, 40), (2, 20)], ["col1", "agg_col3"])
-
-    # Call the aggregate_data function with the test DataFrame and inputs
-    result_df = aggregate_data(df, "col1", ["col3"])
-
-    # Assert that the result DataFrame is equal to the expected DataFrame
-    assert result_df.collect() == expected_df.collect()
-
-
-def test_combine_populations(spark_session):
-    # Create sample populations
-    population1 = spark_session.createDataFrame([(1, 'City1', 100000)], ['id', 'city', 'population'])
-    population2 = spark_session.createDataFrame([(2, 'City2', 200000)], ['id', 'city', 'population'])
-    population3 = spark_session.createDataFrame([(3, 'City3', 300000)], ['id', 'city', 'population'])
-
-    # Combine populations
-    combined_population = combine_populations([population1, population2, population3])
-
-    # Check if combined_population is a DataFrame
-    assert isinstance(combined_population, DataFrame)
-
-    # Check if combined_population has the correct schema
-    assert combined_population.schema == population1.schema
-
-    # Check if combined_population contains all rows from population1, population2 and population3
-    assert combined_population.count() == (population1.count() + population2.count() + population3.count())
-
-    # Check if combined_population contains the correct data by comparing the sum of populations
-    total_population = (population1.selectExpr('sum(population)').first()[0] +
-                        population2.selectExpr('sum(population)').first()[0] +
-                        population3.selectExpr('sum(population)').first()[0])
-
-    assert combined_population.selectExpr('sum(population)').first()[0] == total_population
-
-
-def test_calculate_overlap(spark_session):
-    # Create two test populations
-    population1 = [1, 2, 3, 4, 5]
-    population2 = [4, 5, 6, 7, 8]
-
-    # Convert test populations to Spark DataFrames
-    df1 = spark_session.createDataFrame([population1], ["id"])
-    df2 = spark_session.createDataFrame([population2], ["id"])
-
-    # Calculate the overlap between the populations using calculate_overlap function
-    overlap = calculate_overlap(df1, df2).collect()[0][0]
-
-    # Check if the calculated overlap is correct
-    assert overlap == [4, 5]
-
-
-def test_filter_population(spark_session):
-    # Create a sample population DataFrame for testing
-    population_data = [
-        ("John Doe", 25, "Male"),
-        ("Jane Smith", 30, "Female"),
-        ("Michael Johnson", 35, "Male")
-    ]
-    columns = ["Name", "Age", "Gender"]
-    population = spark_session.createDataFrame(population_data, columns)
-
-     # Test filtering by age less than 30
-     criteria = "Age < 30"
-     filtered_population = filter_population(population, criteria)
+    temp_file_path = os.path.join(temp_dir, "test.json")
     
-     assert filtered_population.count() == 1
-     assert filtered_population.collect()[0]["Name"] == "John Doe"
+    try:
+        with open(temp_file_path, "w") as f:
+            f.write('{"name": "John", "age": 30')
+        
+        df = read_json_file(temp_file_path)
+        
+        assert df.isEmpty()
+        
+    finally:
+        shutil.rmtree(temp_dir)
 
-    # Test filtering by gender is Male
-    criteria = "Gender = 'Male'"
-    filtered_population = filter_population(population, criteria)
+def test_read_parquet_file_valid(spark_session):
+    data = [(1, "apple"), (2, "banana"), (3, "orange")]
+    columns = ["id", "fruit"]
     
-    assert filtered_population.count() == 2
-    assert filtered_population.collect()[0]["Name"] == "John Doe"
-    assert filtered_population.collect()[1]["Name"] == "Michael Johnson"
+    df = spark_session.createDataFrame(data, columns)
+    file_path = "test_file.parquet"
+    
+    df.write.parquet(file_path)
+    
+    result_df = read_parquet_file(file_path)
+    
+    assert isinstance(result_df, type(df))
+    
+def test_read_parquet_file_invalid():
+   with pytest.raises(Exception):
+       read_parquet_file("invalid_path.parquet")
 
+def test_read_dataframe_from_table(spark_session):
+   url = "jdbc:postgresql://localhost:5432/mydatabase"
+   table = "mytable"
+   properties = {
+       "user": "myusername",
+       "password": "mypassword"
+   }
+   
+   df = read_dataframe_from_table(url, table, properties)
+   
+   assert df.count() > 0
+   assert len(df.columns) == 3
+   
+   expected_columns = ["column1", "column2", "column3"]
+   assert df.columns == expected_columns
+   
+   expected_data_types = ["string", "integer", "double"]
+   assert [str(field.dataType) for field in df.schema.fields] == expected_data_types
 
+@pytest.fixture(scope="session")
+def test_data(spark):
+   data = [("John", 25), ("Alice", 30), ("Bob", 35)]
+   schema = ["name", "age"]
+   return spark.createDataFrame(data, schema)
 
-def test_aggregate_profiles(spark_session):
-    # Test case 1: when populations and metrics are empty, the result should be an empty DataFrame
-    populations = []
-    metrics = []
-    result = aggregate_profiles(populations, metrics)
-    assert result.count() == 0
+def test_filter_dataframe_with_condition(test_data):
+   condition = "age > 25"
+   
+   filtered_df = filter_dataframe(test_data, condition)
+   
+   assert filtered_df.count() == 2
 
-    # Test case 2: when populations are not empty but metrics are empty, the result should be an empty DataFrame
-    population1 = Population(sql_query='SELECT * FROM population1')
-    population2 = Population(sql_query='SELECT * FROM population2')
-    populations = [population1, population2]
-    metrics = []
-    result = aggregate_profiles(populations, metrics)
-    assert result.count() == 0
+def test_filter_dataframe_without_matching_condition(test_data):
+   condition = "age > 40"
+   
+   filtered_df = filter_dataframe(test_data, condition)
+   
+   assert filtered_df.count() == 0
 
-    # Test case 3: when both populations and metrics are not empty, the result should be a non-empty DataFrame
-    population3 = Population(sql_query='SELECT * FROM population3')
-    metrics = ['age', 'gender']
-    result = aggregate_profiles(populations + [population3], metrics)
-    assert result.count() > 0
+def test_filter_dataframe_with_invalid_condition(test_data):
+   condition = "invalid_column > 30"
+   
+   with pytest.raises(Exception) as e:
+       filter_dataframe(test_data, condition)
+       
+       assert str(e.value) == "cannot resolve 'invalid_column'"
 
+def test_select_columns(spark_session):
+   dataframe = spark_session.createDataFrame([(1, 'Alice', 25), (2, 'Bob', 30)], ['id', 'name', 'age'])
+   
+   selected_df = select_columns(dataframe, ['name', 'age'])
+   
+   assert selected_df.columns == ['name', 'age']
+    
+def test_select_columns_no_columns(spark_session):
+   dataframe= spark_session.createDataFrame([(1,'Alice',25),(2,'Bob',30)],['id','name','age'])
+   
+   selected_df= select_columns(dataframe,[])
+   
+   assert len(selected_df.columns)==0
+    
+def test_select_columns_invalid_columns(spark_session):
+  
+ dataframe= spark_session.createDataFrame([(1,'Alice',25),(2,'Bob',30)],['id','name','age'])
+ 
+ with pytest.raises(AttributeError): 
+     select_columns(dataframe,['id','invalid_column'])
 
-def test_visualize_profiles():
-    # Create two sample population DataFrames
-    population1_df = pd.DataFrame({'metric1': [1, 2, 3, 4, 5],
-                                  'metric2': [10, 20, 30, 40, 50]})
-    population2_df = pd.DataFrame({'metric1': [6, 7, 8, 9, 10],
-                                  'metric2': [60, 70, 80, 90, 100]})
+@pytest.fixture(scope="session")
+def join_test_data(spark):
+ 
+ data_1= [(1,"John"),(2,"Jane"),(3,"Alice")]
+ data_2= [(1,"USA"),(2,"Canada"),(3,"UK")]
+ 
+ return (
+     spark.createDataFrame(data_1,['id','name']),
+     spark.createDataFrame(data_2,['id','country'])
+ )
 
-    # Create a list of metrics to be analyzed
-    metrics = ['metric1', 'metric2']
+ def test_join_dataframes(join_test_data):
 
-    # Call the function to be tested
-    visualize_profiles(population1_df=population1_df,
-                       population2_df=population2_df,
-                       metrics=metrics)
+ data_1,data_2= join_test_data
+ 
+ joined_df= join_dataframes(data_1,data_2,"id")
+ 
+ expected= [(1,"John","USA"),(2,"Jane","Canada"),(3,"Alice","UK")]
+ 
+ result= joined_df.collect()
+ 
+ for row_expected,row_result in zip(expected,result): 
+     for value_expected,value_result in zip(row_expected,row_result): 
+         assert value_expected==value_result
 
-    # Assert that the plot is displayed successfully without any errors
+ def create_spark():
+     return SparkSession.builder.master("local").appName("pytest-pyspark-local-testing").getOrCreate()
 
-    # This assertion checks that no exception is raised when calling plt.show()
-    with pytest.raises(Exception):
-        visualize_profiles(population1_df=population1_df,
-                           population2_df=population2_df,
-                           metrics=metrics)
+ def stop_spark(session): 
+     session.stop()
 
+@pytest.fixture(scope="session")
+ def create_spark_fixture(): 
+     session=create_spark() yield session stop_spark(session)
 
-def test_load_data():
-    # Create a sample PySpark DataFrame object with two columns and two rows
-    df = spark.createDataFrame([(1, 'apple'), (2, 'banana')], ['id', 'fruit'])
+ @pytest.fixture(scope="module")
 
-    # Call the load_data() function and store the result
-    result = load_data(df)
+ def group_by_test_data(create_spark_fixture):
 
-    # Define the expected output as a list of dictionaries representing the data rows
-    expected_output = [{'id': 1, 'fruit': 'apple'}, {'id': 2, 'fruit': 'banana'}]
+ data=[(1,'A',10),(2,'B',20),(3,'C',30)] 
 
-    # Compare the result with the expected output using assert statement
-    assert result == expected_output
+ return create_spark_fixture.createDataFrame(data,['id','category','value'])
 
+ def test_group_by_columns(group_by_test_data): 
+
+grouped_df= group_by_columns(group_by_test_data,['category']) 
+
+assert len(grouped_df.columns)==1 grouped_df=
+group_by_columns(group_by_test_data,['category','value']) 
+
+assert len(grouped_df.columns)== 2
+
+ def cache_or_persist(create_spark_fixture):
+
+ data=[(i,)for i in range (5)] 
+
+schema=['value'] 
+
+return create_spark_fixture.createDataFrame(data,schema)
+
+@pytest.mark.parametrize("storage_level",
+ [
+"MEMORY_ONLY",
+"MEMORY_AND_DISK",
+"DISK_ONLY"])
+
+ def test_cache_or_persist(cache_or_persist_storage_level): 
+
+df=cache_or_persist cache_or_persist(df)
+
+assert getattr(df.storageLevel,f"use{storage_level.replace('_AND_','And')}",False

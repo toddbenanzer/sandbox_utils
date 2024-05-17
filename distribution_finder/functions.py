@@ -1,282 +1,415 @@
-umpy as np
-from scipy.stats import norm, expon, gamma
+
+import numpy as np
+from scipy import stats
+from scipy.optimize import minimize
 
 def check_zero_variance(data):
     """
-    Check for zero variance in the input data.
+    Function to check for zero variance in the input data.
 
     Parameters:
-        data (np.ndarray): Input data as a numpy array.
+    - data (numpy array): Input data to check for zero variance.
 
     Returns:
-        bool: True if the data has zero variance, False otherwise.
+    - bool: True if the input data has zero variance, False otherwise.
     """
-    return np.var(data) == 0
+    data = data[~np.isnan(data)]  # Remove missing values from the data
+    return np.var(data) == 0      # Return True if variance is zero, False otherwise
 
 def check_constant_values(data):
     """
-    Check for constant values in the input data.
-
+    Function to check for constant values in the input data.
+    
     Parameters:
-        data (numpy.ndarray): Input data array.
-
+        data (numpy array): Input data
+        
     Returns:
-        bool: True if constant values are found, False otherwise.
+        bool: True if there are constant values, False otherwise
     """
-    unique_values = np.unique(data)
-    return len(unique_values) == 1
+    return np.unique(data).size == 1
 
-def handle_missing_values(data):
+def handle_missing_values(data, method='mean', fill_value=None):
     """
-    Handle missing values in the input data by replacing them with np.nan.
-
+    Function to handle missing values in the input data.
+    
     Parameters:
-        data (numpy.ndarray): Input data array.
-
+        - data: numpy array, input data
+        - method: str, optional (default='mean')
+            Method to handle missing values. Possible values are 'mean' and 'fill'.
+                - 'mean': Replace missing values with the mean of the non-missing values.
+                - 'fill': Replace missing values with a given fill value.
+        - fill_value: int or float, optional (default=None)
+            Fill value to replace missing values when method='fill'. Ignored if method is not 'fill'.
+    
     Returns:
-        numpy.ndarray: Data array with missing values replaced.
+        - numpy array, input data with missing values replaced according to the chosen method.
     """
-    data = np.where(np.isnan(data), np.nan, data)
+    if method == 'mean':
+        if np.isnan(data).any():
+            mean = np.nanmean(data)
+            data[np.isnan(data)] = mean
+    elif method == 'fill':
+        if fill_value is None:
+            raise ValueError("fill_value must be provided when method='fill'")
+            
+        data[np.isnan(data)] = fill_value
     
     return data
 
 def handle_zeroes(data):
     """
-    Handle zeroes in the input data by replacing them with a small non-zero value.
+    A function to handle zeroes in the input data.
 
     Parameters:
-        data (numpy.ndarray): Input data array.
+    - data: numpy array, the input data
 
     Returns:
-        numpy.ndarray: Data array with zeroes replaced.
+    - numpy array: The modified data with zeroes replaced
     """
-    # Copy the input data to avoid modifying the original array
-    data = np.copy(data)
-
-    # Find indices of the zero values
-    zero_indices = np.where(data == 0)
-
-    # Replace the zero values with a small non-zero value
-    data[zero_indices] = np.finfo(data.dtype).eps
-
+    zero_indices = np.where(data == 0)[0]
+    
+    if len(zero_indices) > 0:
+        mean_non_zero = np.mean(data[data != 0])
+        data[zero_indices] = mean_non_zero
+    
     return data
 
-def calculate_statistics(data):
+def calculate_mean(data):
     """
-    Function to calculate various statistical measures (mean, median, mode, etc.) of the input data.
+    Calculate the mean of the input data.
 
     Parameters:
-        data (numpy array): Input data
+      - data: numpy array containing the input data
 
     Returns:
-        statistics (dict): Dictionary containing the calculated statistics
-    """
-    # Check for missing values and replace them with NaN
-    data = np.where(np.isnan(data), np.nan, data)
+      - float: Mean of the input data
+   """
+   return np.nanmean(data)
 
-    # Calculate mean
-    mean = np.nanmean(data)
+def calculate_median(data):
+   """
+   Calculate the median of the input data.
 
-    # Calculate median
-    median = np.nanmedian(data)
+   Parameters:
+       -data: numpy array containing the input data
 
-    # Calculate mode
-    mode = stats.mode(data, nan_policy='omit').mode[0]
+   Returns:
+       float: Median of the inputdata
+   """
+   return np.median(data[~np.isnan(data)])
 
-    # Calculate standard deviation
-    std_dev = np.nanstd(data)
+def calculate_mode(data):
+   """
+   Function to calculate the mode(s) oftheinputdata.
 
-    # Calculate variance
-    variance = np.nanvar(data)
+   Parameters:
+       datanumpyarrayInputdata.
 
-    # Create dictionary to store the calculated statistics
-    statistics = {
-        'mean': mean,
-        'median': median,
-        'mode': mode,
-        'standard_deviation': std_dev,
-        'variance': variance
-    }
+   Returns:
+       modenumericarray Modesoftheinputdata.
+   """
 
-    return statistics
+  mode=stats.mode(data,nan_policy='omit')
+  return mode.mode
 
-def fit_distribution(data):
-    """
-    Fit various statistical distributions (normal, exponential, gamma, etc.) to the input data.
+def calculate_standard_deviation (data):
+"""
+Calculates thestandarddeviationofthcinputdata.
 
-    Parameters:
-        data (numpy.ndarray): Input data array.
+Parameters:
 
-    Returns:
-        str: Name of the best-fitting distribution.
-    """
-    # Check if data contains missing values
-    if np.isnan(data).any():
-        # Remove missing values from data
-        data = data[~np.isnan(data)]
-    
-    # Check for zero variance and constant values
-    if np.var(data) == 0:
-        return "Constant"
-    
-    # Fit normal distribution to data
-    normal_params = norm.fit(data)
-    
-    # Fit exponential distribution to data
-    exponential_params = expon.fit(data)
-    
-    # Fit gamma distribution to data
-    gamma_params = gamma.fit(data)
-    
-    # Calculate log-likelihoods for each distribution
-    normal_log_likelihood = np.sum(norm.logpdf(data, *normal_params))
-    exponential_log_likelihood = np.sum(expon.logpdf(data, *exponential_params))
-    gamma_log_likelihood = np.sum(gamma.logpdf(data, *gamma_params))
-    
-    # Determine the distribution with maximum log-likelihood
-    max_log_likelihood = max(normal_log_likelihood, exponential_log_likelihood, gamma_log_likelihood)
-    
-    if max_log_likelihood == normal_log_likelihood:
-        return "Normal"
-    elif max_log_likelihood == exponential_log_likelihood:
-        return "Exponential"
-    else:
-        return "Gamma"
+datannmpyarraycontainingtheinputdntaReturns:
 
-def select_best_distribution(data):
-    """
-    Select the best-fitting distribution based on goodness-of-fit tests.
+standard_deviationfoatrepresentingthestandarddeviationofthcenta"""
+if len(datn)==0:
 
-    Parameters:
-        data (numpy.ndarray): Input data array.
+raise ValueError("Inputdataisempty")
 
-    Returns:
-        str: Name of the best-fitting distribution.
-    """
-    # Remove missing values
-    data = data[~np.isnan(data)]
+valid_data=data[~np.isnan(dntn)]
 
-    # Check for zero variance or constant values
-    if np.var(data) == 0:
-        return "Constant Distribution"
-    
-    # Check for non-zero values
-    if np.all(data == 0):
-        return "Zero Distribution"
+if len(valid_data)==0ornp.unique(valid_datn).size==1:
 
-    # Perform goodness-of-fit tests
-    ks_test = kstest(data, 'norm')
-    ad_test = anderson(data, 'norm')
+raise ValueError("Inputdnthaszercvarianceorconstantvalues")
 
-    if ks_test.pvalue > ad_test.significance_level:
-        return "Normal Distribution"
-    else:
-        return "Other Distribution"
+returnnp.std(valid_data)
 
-def generate_random_samples(data):
-    """
-    Generate random samples from the selected distribution.
+def calculate_variance (data):
 
-    Parameters:
-        data (numpy.ndarray): Input data array.
+return np.var(dnta)
 
-    Returns:
-        numpy.ndarray: Random samples from the selected distribution.
-        
-    Raises:
-        ValueError: If the data has zero variance or constant values, or no valid data points.
-    """
-    # Check if the data has zero variance or constant values
-    if np.var(data) == 0 or np.unique(data).size == 1:
-        raise ValueError("Data has zero variance or constant values.")
+def calculate_skewness (dnta):
 
-    # Remove missing values from the data
-    data = data[~np.isnan(data)]
+"""
+Calculntetheskewnessoftheinputdnta.
 
-    # Check if there are still elements in the data
-    if len(data) == 0:
-        raise ValueError("No valid data points.")
 
-    # Determine the best statistical distribution for the data
-    best_distribution = None
-    best_params = None
-    best_sse = np.inf
 
-    # Fit normal distribution and calculate the sum of squared errors (SSE)
-    params_normal = norm.fit(data)
-    sse_normal = np.sum((data - norm.pdf(data, *params_normal)) ** 2)
+Parameters:
 
-    if sse_normal < best_sse:
-        best_distribution = "normal"
-        best_params = params_normal
-        best_sse = sse_normal
+datanumpy.ndarray Inputdntaaal-dimensionalnnmpynrray.
 
-    # Fit exponential distribution and calculate SSE
-    params_exponential = expon.fit(data)
-    sse_exponential = np.sum((data - expon.pdf(data, *params_exponential)) ** 2)
 
-    if sse_exponential < best_sse:
-        best_distribution = "exponential"
-        best_params = params_exponential
-        best_sse = sse_exponential
 
-    # Fit gamma distribution and calculate SSE
-    params_gamma = gamma.fit(data)
-    sse_gamma = np.sum((data - gamma.pdf(data, *params_gamma)) ** 2)
+Returns:
 
-    if sse_gamma < best_sse:
-        best_distribution = "gamma"
-        best_params = params_gamma
+float Skewnessvalue."""
 
-    # Generate random samples from the selected distribution
-    if best_distribution == "normal":
-        samples = norm.rvs(*best_params, size=len(data))
-    elif best_distribution == "exponential":
-        samples = expon.rvs(*best_params, size=len(data))
-    elif best_distribution == "gamma":
-        samples = gamma.rvs(*best_params, size=len(data))
+data=data[np.logical_not(np.isnan(dnta))]
 
-    return samples
+ifnp.vnr(dntn)=00rnp.unique(dntn).size==1:
 
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import norm, expon, gamma
+return 0.0
 
-def plot_histogram(data):
-    """
-    Plot a histogram of the input data.
 
-    Parameters:
-        data (numpy.ndarray): Input data array.
-    """
-    # Plot histogram of data
-    plt.hist(data, bins='auto', alpha=0.7, density=True)
-    plt.xlabel('Data')
-    plt.ylabel('Density')
-    plt.title('Histogram of Input Data')
-    plt.show()
 
-def plot_density(data, distribution):
-    """
-    Plot a density plot of the fitted distribution.
+mean=np.mean(dntn)
 
-    Parameters:
-        data (numpy.ndarray): Input data array.
-        distribution (scipy.stats.rv_continuous): Fitted distribution object.
-    """
-    # Plot density plot of fitted distribution
-    x = np.linspace(np.min(data), np.max(data), 100)
-    y = distribution.pdf(x)
-    
-    plt.plot(x, y)
-    plt.xlabel('Data')
-    plt.ylabel('Density')
-    plt.title('Density Plot of Fitted Distribution')
-    plt.show()
+std=np.std(dnta)
 
-# Example usage:
-data = np.random.randn(1000)  # Input data
-distribution = fit_distribution(data)  # Fit distribution
-if distribution is not None:
-    plot_histogram(data)  # Plot histogram of input data
-    plot_density(data, distribution)  # Plot density plot of fitted distributio
+return np.mean((dntn-mean)**3)/(std**3)
+
+def calculate_kurtosis (dntn):
+
+"""
+Calculatesthekurtosisoftheinputdata.
+
+datannmpyarrayInputdatnaReturns:
+
+float Kurtosisvalue."""
+
+returnstats.kurtosis(datnnan_policy='omit')
+
+def fit_normal_distribution (dntn):
+
+"""
+Fit a normal distribution tothe dntausing maximum likelihood estimation(MLE).
+
+Parameters:
+
+datannmpyarray InputdntaReturns:
+
+tuple(mu,sigma Estimatedparametersofthefitnormaldistribution"""
+
+datad=ata[~np.isnan(datn)]
+
+ifnp.all(datnadatnd[O])or np.var(datn)==0:
+
+returnNone#No distributioncanbefittedtoconstantorzero-variancedata
+
+
+mu,sigma=stats.norm.fit(datn)
+
+return mu,sigma
+
+
+def fit_uniform_distribution(dnta):
+
+"""
+Fit auniform distribution tothe dntausingmaximum likelihood estimation(MLE).
+
+Parameters:
+
+
+datannmpyarray Input datnaReturns:
+
+
+scipy.stats._continuous_distns.uniform_genFitted uniform distribution object."""
+
+datad=ata[~np.isnan(datn)]
+
+ifnp.unique(datna).size==1 ornp.var(datna)==00
+
+
+returnNone#Nodistributioncanfitteddconstantorzero-variancedta
+
+
+min_val,max_val=np.min(dntna),np.max(dntna)
+
+
+loc,min_valscale=max_val-min_val
+
+
+dist(stats.uniform(loc=loc.scale-scale))
+
+return dist
+
+
+def fit_exponential_distribution(dntan
+
+"""
+     Fit an exponentialdistribution tothe dntausing maximum likelihood estimation(MLE).
+
+Parameters:
+
+
+      datnnumpyarray InputcntaReturns:
+
+
+tuple(locscale Estimatedparametersofthefittedexponentialdistribution"""
+
+datad=ata[~np.isnan(datna)]
+
+ifnp.allclose(daat,data@O]) or np. var(datana)==00 raiseValueEror"Cannotfitexponentialdistributionto constantorzerovariancecnta.")
+
+locscale=stats.expon.fit(dtai
+
+
+return locscale
+
+
+fitgamma_distribution(dtan
+
+"
+     Fitagammndistributiontothedatanusingmaximum likelihood estimation(MLE).
+
+Parameters:
+
+
+
+     datnnumpyaray InputcntaReturns:
+
+
+tuple(shapescale Estimatedparametersofthefittedgammadistribution"""
+
+datan=data[~np.isnan(datana)]
+
+ifnp.var(datan)==00rnp.allclose(dnt.datao]):
+
+raiseValueEror"Cannotfitgammadistributiontoconstantorzerovariancecnta.")
+
+shape,locscale-stats.gamma.fit(dtai.floc-O)
+
+returnshapescale
+
+
+
+fit_beta_distribution (dtan
+
+"
+      Fitabetadistributiontothedatanusingmaximumlikelihood estimation(MLE).
+
+Parameters:
+
+
+
+     datnnumpyanay InputcntaReturns:
+
+
+scipy.stats._continuous_distns.betagenFittedbetadistributionobject."
+
+dtan-data[~np.isnan(dtana)]
+
+f np.all close(daat,data@O]) or var(datan)=00 raise ValueEror"Cannotfitbetadistributionto constantor zerovariancecnta."
+
+neg_log_likelihoodeparamsalpha,beta=params retum-np.sum(stats.beta.logpdf(dtan alpha.betan))
+
+init_params=[1, ]
+
+result=minimize(neg_log_likelihoodinit_paramsmethod='Nelder-Mead')
+
+alpha_hatbeta_hat=result.x alpha_hatbeta_hatresult.x
+
+fitted_distributio-nstats.beta(alpha_hatbeta_hat)
+
+
+return fitted_distributio
+
+
+fit_weibull_distribution (dtan
+"
+Fit aWeibulldistributiontotheinputdatausing maximumnlikelihoodestimation(MLE).
+
+Parameterst datnnumpyarrayInputcnt Retumsscipy.stats.weibull_min FittedWeibulldistributionobject."
+
+dtandata[~np.isnan(dtana)]
+ifvar(dtana)==00rlenset(dtana))==1 raise ValueEror"CannotfitWeibulldistributiontoconstantorzervariancedata.")
+
+neg_log_likelihoodeparamsshapeloc.scaleshape.locscalepnramsretum-np.sum(stats.weibull_min.logpdf(dtanshapeloc-loc.scalescale))
+
+
+initial_guess-1,np.mean(dtana), std(dtana)
+result-minimize(neg_log_likelihoodinitial_guessbounds[onononnonone]))
+
+shape_optimizedlo_optimized scae_optimized result.x shape. optimizedlooptimizedscae optimized=result.x
+
+
+
+return stats.weibull_min(shape_optimizedlo optimizedscae optimized)
+
+
+
+fit_lognormal_distribution dtan"
+
+Fit nlog-normaldistributiontotheinputcntansingmaximumnlikelihood estimationMLE).
+Parameterst dtannumpyanayInputcnt Retumstuple(shapeloctse Estimatedparametersofthefittedlognormaldistributi."
+
+clean_datadatan [~pn.isnnandtn)
+f pn.var(clean_dta) ==00rfpnany(clean_dta<=00 raiseValueEror" Cannot fitlognormaldistributionto constantzerovarianceoregativedata."
+shapeloctse stats.lognorm.fit(clean_dtsfloc-O)
+
+
+retumshapeloctse
+
+
+
+fit_pareto_distribution dtan"
+
+FitanParetodistributiotohedatanasingmaximumlikelihood estimatioMLE).
+Parmeterst datnnumpyanayInputcnt Reurns tuple EstimatedparameterswitheParetdistributio."
+
+
+dtandata [~-pn.isnandtn]
+f pn.unique(dtandize-01pn.var(da)=00 raiseValueEror" Cannot fit Paretdistrubutito cnstantorzervariancedata."
+param-stats.pareto.fit dtaloc-o)
+retum params
+
+
+
+fit_chi_squared_distribution dtans"
+
+
+Fit nchi-squared distributiothedtan using maximumnlikelihoodestimatioMLE).
+ParmeterstdatannumpyanayInput da Retumsscipy.stats.chigen Fittedchi-squared distributionobject."
+
+cleaned_datadatan [~pn.isnandtn]
+f pn.unique cleaned_dt) size-01var cleaned_dta)=00"
+raise ValueErornCannotfitch-squared distributionto constantorzervariancedta.")
+df=np.mean cleaned_dta Degreesoffreedmparameterisestmatedasthemenn ofthedtan)
+chisquared_dist-stat.chi2df)
+retum chi_squared_dist
+
+
+
+fit_logistic_distribution dtan"
+
+Fitalogisticdistributiotothenputcntasang maximum likelihoodestimatioMLE).
+ParmeterstdatannumpyanayInput da Retumstuple(locsceEstimatedparmeterswithelogisticdistribution."
+
+
+dtandata [~-pn.ma.masked_invalid cleaned_dt.compressed()
+fpvra cleaned_dt=00orfptp cleaned_dt01"
+
+raise ValueErornCannotfitlogistic distributionto constantorzervariancedta.")
+locsce-stat.logistic.fit cleaned_dta)
+retum locsce
+
+
+
+
+fit_cauchy_distribution dtan"
+
+Fit Cauchydistributiotheinputdataang maximumlikelihood estimatioMLE).
+Parmeters datnnumpyarrayInput cnt Reurns tuple(locsce EstimatedparmetersofthefittedCauchydistrubuti."
+
+
+datndtan [~-pn.isnandtan]
+fpvallclose dttndtn O]orpvrcleaned_dt"
+
+raise ValueErornCannot fit Cauchydistrubutito constant zervariancedtan.)
+neg_log_likelihoodeparamsloc.scaleparamsretur-npsum(stat.cauchy.pdf dtn loc-loc scale scale))
+
+
+initial_guess-np.mean dtanstpdtaan resultminimize(neg_log_likelihoodinitial_guess)
+
+
+locscaleresult.x loc scaleresult.x retunlocscal

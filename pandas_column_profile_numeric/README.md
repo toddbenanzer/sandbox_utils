@@ -1,259 +1,87 @@
-## Overview
+# Overview
 
-This package provides a set of functions for performing various statistical calculations and data handling operations on pandas dataframes. The functions in this package can be used to calculate basic summary statistics, handle missing and infinite values, check for null and trivial columns, estimate the statistical distribution of a column, and more.
+This package provides several functions for calculating descriptive statistics on numeric columns in a pandas DataFrame. The functions included are:
 
-## Usage
+- `calculate_mean`: calculates the mean of a numeric column.
+- `calculate_median`: calculates the median of a numeric column.
+- `calculate_mode`: calculates the mode of a numeric column.
+- `calculate_quartiles`: calculates the quartiles of a numeric column.
+- `calculate_range`: calculates the range of a numeric column.
+- `calculate_standard_deviation`: calculates the standard deviation of a numeric column.
+- `calculate_variance`: calculates the variance of a numeric column.
+- `calculate_skewness`: calculates the skewness of a numeric column.
 
-To use this package, you will need to have pandas and numpy installed.
+# Usage
 
-```python
-import pandas as pd
-import numpy as np
-from scipy.stats import norm, lognorm, expon, gamma
+To use this package, you will need to have pandas and numpy installed in your environment. You can install them using pip:
+
+```
+pip install pandas numpy
 ```
 
-The following functions are available in this package:
-
-### `calculate_mean(column)`
-
-Calculates the mean of the input column.
-
-Parameters:
-- `column` (pandas.Series): Input column
-
-Returns:
-- `float`: Mean of the column
-
-### `calculate_median(column)`
-
-Calculates the median of the input column.
-
-Parameters:
-- `column` (pandas.Series): Numeric column for which median needs to be calculated
-
-Returns:
-- `float`: Median of the input column
-
-### `calculate_mode(column)`
-
-Calculates the mode(s) of the input column.
-
-Parameters:
-- `column` (pandas.Series): Input column
-
-Returns:
-- `pandas.Series`: Mode(s) of the input column
-
-### `calculate_standard_deviation(column)`
-
-Calculates the standard deviation of the input column.
-
-Parameters:
-- `column` (pandas.Series): Input column
-
-Returns:
-- `float`: Standard deviation of the input column
-
-### `handle_missing_data(column)`
-
-Handles missing data in the input column by replacing them with the median value.
-
-Parameters:
-- `column` (pandas.Series): Input column
-     
-Returns:
-- `pandas.Series`: Column with missing values replaced with median
-
-### `handle_infinite_data(column)`
-
-Handles infinite data in the input column by replacing infinite values with NaN.
-
-Parameters:
-- `column` (pandas.Series): Input column
-         
-Returns:
-- `pandas.Series`: Column with infinite values replaced with NaN
-
-### `check_null_columns(df)`
-
-Checks for null columns in the dataframe.
-
-Parameters:
-- `df` (pandas.DataFrame): The dataframe to check.
-        
-Returns:
-- `list`: A list of column names that contain null values.
-
-### `check_trivial_columns(dataframe)`
-
-Checks for trivial columns (columns with only one unique value) in the dataframe.
-
-Parameters:
-- `dataframe` (pandas.DataFrame): The dataframe to check.
-        
-Returns:
-- `list`: A list of column names that contain trivial values.
-
-### `calculate_missing_prevalence(column)`
-
-Calculates the prevalence of missing values in the input column.
-
-Parameters:
-- `column` (pandas.Series): Input column to analyze.
-        
-Returns:
-- `float`: Prevalence of missing values in the input column.
-
-### `calculate_zero_prevalence(column)`
-
-Calculates the prevalence of zero values in the input column.
-
-Parameters:
-- `column` (pandas.Series): Input column containing numeric values.
-         
-Returns:
-- `float`: Prevalence of zero values as a float between 0 and 1.
-
-### `estimate_distribution(column)`
-
-Estimates the likely statistical distribution of the input column.
-
-Parameters:
-- `column` (pandas.Series): Input column
-        
-Returns:
-- `tuple`: The name of the best fit distribution and its parameters
-
-## Examples
-
-Here are some examples demonstrating how to use this package:
-
-### Example 1: Calculating Mean, Median, and Mode
+Once you have installed the required dependencies, you can import the package and use the provided functions. Here is an example:
 
 ```python
 import pandas as pd
 import numpy as np
-from scipy.stats import norm, lognorm, expon, gamma
-from statistics import calculate_mean, calculate_median, calculate_mode
+from descriptive_stats import calculate_mean, calculate_median
 
-data = pd.Series([1, 2, 3, 4, 5, np.nan])
+# Create a sample dataframe
+data = {'A': [1, 2, 3, 4, 5], 'B': [6, 7, 8, 9, 10]}
+df = pd.DataFrame(data)
 
-mean = calculate_mean(data)
-median = calculate_median(data)
-mode = calculate_mode(data)
+# Calculate the mean and median of column 'A'
+mean = calculate_mean(df, 'A')
+median = calculate_median(df, 'A')
 
 print("Mean:", mean)
 print("Median:", median)
+```
+
+# Examples
+
+Here are some examples demonstrating how to use each function:
+
+```python
+import pandas as pd
+from descriptive_stats import calculate_mean, calculate_median, calculate_mode, calculate_quartiles, calculate_range,
+                               calculate_standard_deviation, calculate_variance, calcuate_skewness
+
+# Create a sample dataframe
+data = {'A': [1, 2, 3, 4, 5], 'B': [6, 7, 8, 9, 10]}
+df = pd.DataFrame(data)
+
+# Calculate the mean of column 'A'
+mean = calculate_mean(df, 'A')
+print("Mean:", mean)
+
+# Calculate the median of column 'A'
+median = calculate_median(df, 'A')
+print("Median:", median)
+
+# Calculate the mode of column 'A'
+mode = calculate_mode(df, 'A')
 print("Mode:", mode)
+
+# Calculate the quartiles of column 'A'
+quartiles = calculate_quartiles(df['A'])
+print("Quartiles:", quartiles)
+
+# Calculate the range of column 'A'
+range_ = calculate_range(df['A'])
+print("Range:", range_)
+
+# Calculate the standard deviation of column 'A'
+std_deviation = calculate_standard_deviation(df, 'A')
+print("Standard Deviation:", std_deviation)
+
+# Calculate the variance of column 'A'
+variance = calculate_variance(df, 'A')
+print("Variance:", variance)
+
+# Calculate the skewness of column 'A'
+skewness = calcuate_skewness(df['A'])
+print("Skewness:", skewness)
 ```
 
-Output:
-```
-Mean: 3.0
-Median: 3.0
-Mode: 0    1.0
-dtype: float64
-```
-
-### Example 2: Handling Missing and Infinite Data
-
-```python
-import pandas as pd
-import numpy as np
-from scipy.stats import norm, lognorm, expon, gamma
-from statistics import handle_missing_data, handle_infinite_data
-
-data = pd.Series([1, np.nan, 3, np.inf, -np.inf])
-
-cleaned_data = handle_missing_data(data)
-replaced_data, num_infinite = handle_infinite_data(cleaned_data)
-
-print("Cleaned Data:", cleaned_data)
-print("Replaced Data:", replaced_data)
-print("Number of Infinite Values:", num_infinite)
-```
-
-Output:
-```
-Cleaned Data: 0    1.0
-1    2.0
-2    3.0
-3    2.0
-4    2.0
-dtype: float64
-Replaced Data: 0    1.0
-1    NaN
-2    3.0
-3    NaN
-4    NaN
-dtype: float64
-Number of Infinite Values: 2
-```
-
-### Example 3: Checking Null and Trivial Columns
-
-```python
-import pandas as pd
-import numpy as np
-from scipy.stats import norm, lognorm, expon, gamma
-from statistics import check_null_columns, check_trivial_columns
-
-data = pd.DataFrame({'A': [1, np.nan], 'B': [np.nan, np.nan], 'C': [1, 1]})
-
-null_columns = check_null_columns(data)
-trivial_columns = check_trivial_columns(data)
-
-print("Null Columns:", null_columns)
-print("Trivial Columns:", trivial_columns)
-```
-
-Output:
-```
-Null Columns: ['A', 'B']
-Trivial Columns: ['C']
-```
-
-### Example 4: Calculating Missing and Zero Prevalence
-
-```python
-import pandas as pd
-import numpy as np
-from scipy.stats import norm, lognorm, expon, gamma
-from statistics import calculate_missing_prevalence, calculate_zero_prevalence
-
-data = pd.Series([1, np.nan, 0, 0, 1])
-
-missing_prevalence = calculate_missing_prevalence(data)
-zero_prevalence = calculate_zero_prevalence(data)
-
-print("Missing Prevalence:", missing_prevalence)
-print("Zero Prevalence:", zero_prevalence)
-```
-
-Output:
-```
-Missing Prevalence: 0.2
-Zero Prevalence: 0.4
-```
-
-### Example 5: Estimating Distribution
-
-```python
-import pandas as pd
-import numpy as np
-from scipy.stats import norm, lognorm, expon, gamma
-from statistics import estimate_distribution
-
-data = pd.Series([1, 2, 3, 4, 5])
-
-distribution_name, distribution_params = estimate_distribution(data)
-
-print("Best Fit Distribution:", distribution_name)
-print("Distribution Parameters:", distribution_params)
-```
-
-Output:
-```
-Best Fit Distribution: norm
-Distribution Parameters: (3.0, 1.5811388300841898)
-```
+These are just a few examples of how to use the functions in this package. For more information on each function and their parameters, refer to the docstrings provided in the code.

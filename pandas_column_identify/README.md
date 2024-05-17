@@ -1,128 +1,138 @@
-**README.md**
-
-# Data Type Analyzer
-
-A Python package for analyzing and handling data types in a pandas DataFrame.
+# Functionality Documentation
 
 ## Overview
-
-The Data Type Analyzer is a Python package designed to help users analyze and handle different data types in a pandas DataFrame. It provides functions for checking the data type of a column, handling missing or infinite data, determining the most likely data type of a column, and handling mixed data.
+This package provides a set of functions for handling and analyzing data in pandas DataFrames. The functions cover a range of tasks such as checking for missing or trivial data, handling missing or infinite values, and calculating various statistics on the data.
 
 ## Usage
-
-To use the Data Type Analyzer package, follow these steps:
-
-1. Install the package by running `pip install datatype-analyzer`.
-2. Import the necessary modules:
+To use this package, you need to have pandas and numpy installed. You can import the necessary modules using the following code:
 
 ```python
 import pandas as pd
 import numpy as np
-from datatype_analyzer import *
 ```
 
-3. Use the available functions to analyze and handle data types in your DataFrame.
+The package includes the following functions:
 
-### Available Functions
+1. `is_column_null_or_empty(df, column_name)`: Checks if a column is null or empty in a pandas DataFrame.
 
-- `check_column_string(df, column_name)`: Checks if all values in a column are strings.
-- `check_column_numeric(column)`: Checks if all values in a column are numeric.
-- `check_column_integer(df, column_name)`: Checks if all values in a column are integers.
-- `check_column_float(column)`: Checks if all values in a column are floats.
-- `check_column_boolean(column)`: Checks if all values in a column are boolean.
-- `check_column_date(column)`: Checks if all values in a column are dates.
-- `check_column_datetime(column)`: Checks if all values in a column are datetimes.
-- `handle_missing_data(column)`: Handles missing data by replacing empty or NaN values with NaN.
-- `handle_infinite_data(column)`: Handles infinite data by replacing infinity values with NaN.
-- `check_null_or_empty(column)`: Checks if a column contains any null or empty values.
-- `is_trivial_column(column)`: Checks if a column contains only one unique value or binary 0s and 1s.
-- `determine_most_likely_data_type(df, column_name)`: Determines the most likely data type of a column.
-- `check_null_column(column)`: Checks if all values in a column are null.
-- `is_trivial_column(column)`: Checks if a column contains only one unique value or binary 0s and 1s.
-- `check_categorical(column)`: Checks if a column is categorical.
-- `is_boolean_column(column)`: Checks if all values in a column are boolean.
-- `is_categorical(column)`: Checks if a column is categorical.
-- `handle_missing_data(column, method='impute', value=None)`: Handles missing data by either imputing or removing NaN values.
-- `handle_infinite_data(data, remove_values=True)`: Handles infinite data by replacing infinity values with NaN, optionally removing them.
-- `determine_data_type(column)`: Determines the data type of a column.
-- `handle_mixed_data(df, column_name)`: Handles mixed data types in a column.
+2. `is_trivial(column)`: Checks if a column contains only trivial data (e.g. all values are the same).
+
+3. `handle_missing_data(column)`: Handles missing data in a pandas Series by filling it with appropriate values based on its type.
+
+4. `handle_infinite_values(column)`: Handles infinite values in a pandas Series by replacing them with NaN.
+
+5. `check_boolean_data(column)`: Checks if a column contains boolean data.
+
+6. `is_categorical(column)`: Checks if a column contains categorical data.
+
+7. `is_string_column(column)`: Checks if a column contains string data.
+
+8. `check_numeric_data(column)`: Checks if a column contains numeric data.
+
+9. `convert_string_to_numeric(df, column)`: Converts a string column to numeric type if possible.
+
+10. `convert_string_to_date(df, column_name)`: Converts a string column to datetime type if possible.
+
+11. `convert_boolean_column(column)`: Converts a boolean column to appropriate boolean type (True/False or 1/0).
+
+12. `convert_categorical_column(df, column_name)`: Converts a categorical column to category type.
+
+13. `calculate_missing_percentage(column)`: Calculates the percentage of missing values in a column.
+
+14. `calculate_infinite_percentage(column)`: Calculates the percentage of infinite values in a column.
+
+15. `calculate_frequency_distribution(dataframe, column)`: Calculates the frequency distribution of values in a column.
+
+16. `calculate_unique_values(column)`: Calculates the unique values in a column.
+
+17. `calculate_non_null_values(column)`: Calculates the number of non-null values in a column.
+
+18. `calculate_average(column)`: Calculates the average numeric value in a column.
+
+19. `calculate_numeric_sum(column)`: Calculates the sum of numeric values in a column.
+
+20. `calculate_min_value(dataframe, column)`: Calculates the minimum numeric value in a column.
+
+21. `calculate_max_value(dataframe, column)`: Calculates the maximum numeric value in a column.
+
+22. `calculate_numeric_range(column)`: Calculates the range of numeric values in a column.
+
+23. `calculate_median(column)`: Calculates the median numeric value in a column.
+
+24. `calculate_mode(dataframe, column)`: Calculates the mode categorical value in a column.
+
+25. `calculate_earliest_date(dataframe, column)`: Calculates the earliest date value in a datetime column.
+
+26. `calculate_latest_date(column)`: Calculates the latest date value in a datetime column.
+
+27. `calculate_time_range(column)`: Calculates the time range (difference between min and max values) of a datetime column.
+
 
 ## Examples
+Here are some examples demonstrating how to use the functions:
 
-Here are some examples of how to use the Data Type Analyzer package:
-
-### Checking Data Types
-
+1. Checking if a column is null or empty:
 ```python
-df = pd.DataFrame({
-    'col1': ['apple', 'banana', 'cherry'],
-    'col2': [1, 2, 3],
-    'col3': [1.1, 2.2, 3.3],
-    'col4': [True, False, True],
-    'col5': ['2021-01-01', '2022-01-01', '2023-01-01'],
-    'col6': pd.to_datetime(['2021-01-01', '2022-01-01', '2023-01-01']),
-})
-
-check_column_string(df, 'col1')  # True
-check_column_numeric(df['col2'])  # True
-check_column_integer(df, 'col2')  # True
-check_column_float(df['col3'])  # True
-check_column_boolean(df['col4'])  # True
-check_column_date(df['col5'])  # True
-check_column_datetime(df['col6'])  # True
+df = pd.DataFrame({'A': [1, 2, np.nan], 'B': ['', 'hello', 'world']})
+is_column_null_or_empty(df, 'A')  # Output: False
+is_column_null_or_empty(df, 'B')  # Output: False
 ```
 
-### Handling Missing Data
-
+2. Checking if a column contains only trivial data:
 ```python
-column = pd.Series(['', 'NA', 'N/A', 'nan', 'NaN'])
-handle_missing_data(column)
-# Output: pd.Series([])
+column = pd.Series([1, 1, 1])
+is_trivial(column)  # Output: True
 
-column = pd.Series([1, np.inf, -np.inf, 2])
-handle_infinite_data(column)
-# Output: pd.Series([1, nan, nan, 2])
-
-column = pd.Series([None, '', np.nan])
-check_null_or_empty(column)
-# Output: True
+column = pd.Series([1, 2, 3])
+is_trivial(column)  # Output: False
 ```
 
-### Determining Most Likely Data Type
-
+3. Handling missing data in a column:
 ```python
-df = pd.DataFrame({
-    'col1': ['apple', 'banana', 'cherry'],
-    'col2': [True, False, True],
-    'col3': ['2021-01-01', '2022-01-01', '2023-01-01'],
-    'col4': pd.to_datetime(['2021-01-01', '2022-01-01', '2023-01-01']),
-    'col5': [1.1, 2.2, 3.3],
-})
-
-determine_most_likely_data_type(df, 'col1')  # String
-determine_most_likely_data_type(df, 'col2')  # Boolean
-determine_most_likely_data_type(df, 'col3')  # Date
-determine_most_likely_data_type(df, 'col4')  # Datetime
-determine_most_likely_data_type(df, 'col5')  # Float
+column = pd.Series([1, np.nan, 3])
+handle_missing_data(column)  # Output: [1, 0, 3]
 ```
 
-### Handling Mixed Data
-
+4. Handling infinite values in a column:
 ```python
-df = pd.DataFrame({
-    'col1': ['apple', 1, True, pd.NA],
-    'col2': [1, 2, 3, None],
-})
-
-handle_mixed_data(df, 'col1')
-# Output:
-#   col1  col2
-# 0   NaN     1
-# 1   NaN     2
-# 2   NaN     3
-# 3   NaN  <NA>
+column = pd.Series([np.inf, -np.inf, 1])
+handle_infinite_values(column)  # Output: [NaN, NaN, 1]
 ```
 
-## License
+5. Checking if a column contains boolean data:
+```python
+column = pd.Series([True, False, True])
+check_boolean_data(column)  # Output: True
 
-This package is licensed under the MIT License.
+column = pd.Series([True, False, 'foo'])
+check_boolean_data(column)  # Output: False
+```
+
+6. Checking if a column contains categorical data:
+```python
+column = pd.Series(['cat', 'dog', 'cat'], dtype='category')
+is_categorical(column)  # Output: True
+
+column = pd.Series(['cat', 'dog', 'cat'])
+is_categorical(column)  # Output: False
+```
+
+7. Checking if a column contains string data:
+```python
+column = pd.Series(['foo', 'bar', 'baz'])
+is_string_column(column)  # Output: True
+
+column = pd.Series([1, 2, 3])
+is_string_column(column)  # Output: False
+```
+
+8. Checking if a column contains numeric data:
+```python
+column = pd.Series([1, 2, 3])
+check_numeric_data(column)  # Output: True
+
+column = pd.Series(['foo', 'bar', 'baz'])
+check_numeric_data(column)  # Output: False
+```
+
+These are just a few examples, there are many more functions available in this package for handling and analyzing data in pandas DataFrames.

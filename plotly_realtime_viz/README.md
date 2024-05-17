@@ -1,133 +1,134 @@
-# Overview
+# Real-Time Data Analysis Package
 
-This package provides a set of functions for fetching, preprocessing, and visualizing data using the Plotly library. It includes functions for fetching data from an API or a database, preprocessing the data, filtering the data based on certain criteria, and transforming the data into suitable formats for different types of Plotly charts. It also includes functions for creating real-time charts such as line charts, bar charts, scatter plots, pie charts, and heatmaps.
+This package provides functionality for fetching, preprocessing, aggregating, filtering, transforming, and visualizing real-time data. It includes methods for retrieving data from RESTful APIs, websockets, and databases. The package also offers various data preprocessing techniques such as handling missing values and outliers, normalizing data, and calculating descriptive statistics. Additionally, it provides tools for creating real-time line charts, bar charts, scatter plots, area charts, pie charts, and heatmaps.
 
-# Usage
+## Installation
 
-To use this package, you will need to have Python installed on your machine. You will also need to install the following dependencies:
+To install the package, use the following command:
 
-- `requests`
-- `sqlite3`
-- `plotly`
-- `numpy`
-
-You can install these dependencies using pip:
-
-```bash
-pip install requests sqlite3 plotly numpy
+```
+pip install real-time-data-analysis
 ```
 
-Once you have installed the dependencies, you can import the functions from the package in your Python script or interactive session.
+## Usage
+
+Import the package in your Python script:
 
 ```python
-import requests
-import sqlite3
-import time
-import random
-from itertools import count
-import plotly.graph_objects as go
-from plotly.offline import iplot
-import plotly.express as px
-import numpy as np
+import real_time_data_analysis as rtda
 ```
 
-# Examples
+## Examples
 
-Here are some examples that demonstrate how to use the functions provided by this package.
-
-## Fetching Data from an API
-
-You can use the `fetch_data_from_api(url)` function to fetch data from an API. The function takes a URL as input and returns the fetched data in JSON format.
+### Fetching Real-Time Data from RESTful API
 
 ```python
-data_url = "https://api.example.com/data"
-data = fetch_data_from_api(data_url)
+url = "https://api.example.com/data"
+data = rtda.fetch_realtime_data(url)
 ```
 
-## Fetching Data from a Database
-
-You can use the `fetch_data_from_database(database, query)` function to fetch data from a SQLite database. The function takes a database file path and a SQL query as inputs and returns the fetched data as a list of rows.
+### Fetching Real-Time Data from WebSocket
 
 ```python
-database_file = "data.db"
-query = "SELECT * FROM table"
-data = fetch_data_from_database(database_file, query)
+url = "wss://ws.example.com/data"
+rtda.fetch_realtime_data_ws(url)
 ```
 
-## Preprocessing Data
-
-You can use the `preprocess_data(data)` function to preprocess the fetched data. This function takes the raw data as input and performs necessary preprocessing steps such as cleaning the data, removing outliers, converting data types, etc. The function should return the preprocessed data.
+### Fetching Real-Time Data from PostgreSQL Database
 
 ```python
-preprocessed_data = preprocess_data(data)
+data = rtda.fetch_realtime_data_db()
 ```
 
-## Filtering Data
-
-You can use the `filter_data(data, criteria)` function to filter the data based on certain criteria. This function takes the data and a criteria function as inputs and returns the filtered data. The criteria function should take a single data point as input and return True or False based on whether the data point satisfies the filtering condition.
+### Preprocessing and Cleaning Data
 
 ```python
-def criteria(d):
-    # Filtering condition
-    return d['value'] > 0
-
-filtered_data = filter_data(data, criteria)
+preprocessed_data = rtda.preprocess_data(data)
 ```
 
-## Transforming Data for Plotly
-
-You can use the `transform_data(data)` function to transform the fetched or filtered data into a suitable format for Plotly charts. This function takes either a list or a pandas DataFrame as input and returns the transformed data in a Plotly figure.
+### Aggregating Data over a Specified Time Interval
 
 ```python
-fig = transform_data(filtered_data)
+aggregated_value = rtda.aggregate_data(data, interval_minutes=5)
 ```
 
-## Creating Real-time Line Charts
-
-You can use the `create_realtime_line_chart()` function to create a real-time line chart using Plotly. This function continuously updates the chart with new data points at regular intervals.
+### Filtering Real-Time Data based on Specific Conditions
 
 ```python
-create_realtime_line_chart()
+filtered_data = rtda.filter_realtime_data(data, condition=lambda x: x['value'] > 10)
 ```
 
-## Creating Real-time Bar Charts
-
-You can use the `create_realtime_bar_chart(data)` function to create a real-time bar chart using Plotly. This function continuously updates the chart with new data at regular intervals. The input `data` can be a pandas DataFrame or a list of dictionaries.
+### Transforming Real-Time Data into a Desired Format
 
 ```python
-data = pd.DataFrame({'x': [1, 2, 3], 'y': [4, 5, 6]})
-create_realtime_bar_chart(data)
+transformed_data = rtda.transform_data(real_time_data)
 ```
 
-## Creating Real-time Scatter Plots
-
-You can use the `create_realtime_scatterplot()` function to create a real-time scatter plot using Plotly. This function continuously updates the plot with new data points at regular intervals.
+### Handling Missing or Null Values in Real-Time Data
 
 ```python
-create_realtime_scatterplot()
+cleaned_data = rtda.handle_missing_values(data)
 ```
 
-## Creating Real-time Pie Charts
-
-You can use the `create_realtime_pie_chart(data)` function to create a real-time pie chart using Plotly. This function continuously updates the chart with new data at regular intervals. The input `data` should be a dictionary with labels as keys and corresponding values.
+### Handling Outliers in Real-Time Data using Z-Score Method
 
 ```python
-data = {'A': 1, 'B': 2, 'C': 3}
-create_realtime_pie_chart(data)
+processed_data = rtda.handle_outliers(data, threshold=3)
 ```
 
-## Creating Real-time Heatmaps
-
-You can use the `create_realtime_heatmap()` function to create a real-time heatmap using Plotly. This function continuously updates the heatmap with new data at regular intervals.
+### Normalizing or Scaling Real-Time Data using Min-Max Scaling Technique
 
 ```python
-create_realtime_heatmap()
+normalized_data = rtda.normalize_data(data)
 ```
 
-## Updating a Chart
-
-You can use the `update_chart(new_x, new_y)` function to update an existing line chart with new data points. This function takes the x and y values of the new data point as inputs and adds them to the existing chart.
+### Calculating Descriptive Statistics of Real-Time Data
 
 ```python
-update_chart(5, 10)
+statistics = rtda.calculate_statistics(data)
 ```
+
+### Creating Real-Time Line Charts
+
+```python
+rtda.create_realtime_line_chart()
+```
+
+### Creating Real-Time Bar Charts
+
+```python
+rtda.create_realtime_bar_chart()
+```
+
+### Creating Real-Time Scatter Plots
+
+```python
+rtda.create_realtime_scatter_plot(x_data=[1,2], y_data=[4,5])
+```
+
+### Creating Real-Time Area Charts
+
+```python
+rtda.create_realtime_area_chart(x_data=[1,2,3], y_data=[10,20,30], title="Real-Time Area Chart")
+```
+
+### Creating Real-Time Pie Charts
+
+```python
+data = {'Label 1': 10, 'Label 2': 20, 'Label 3': 30}
+rtda.create_pie_chart_realtime(data)
+```
+
+### Creating Real-Time Heatmaps
+
+```python
+rtda.create_realtime_heatmap()
+```
+
+## Contributions
+
+Contributions are welcome! If you have any ideas or suggestions for improving this package, please open an issue or submit a pull request on the GitHub repository.
+
+## License
+
+This package is licensed under the MIT License. See the [LICENSE](https://github.com/your-username/real-time-data-analysis/blob/main/LICENSE) file for more information.

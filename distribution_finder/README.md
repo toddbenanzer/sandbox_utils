@@ -1,168 +1,216 @@
-# Functionality Documentation
-
 ## Overview
-This python script provides a set of functions for data analysis and statistical modeling. It includes functionality for checking zero variance and constant values in input data, handling missing values and zeroes, calculating statistics, fitting statistical distributions to the data, selecting the best-fitting distribution based on goodness-of-fit tests, generating random samples from the selected distribution, and plotting histograms and density plots.
+
+This Python script provides various functions to handle and analyze data. It includes functionalities to check for zero variance and constant values, handle missing values, replace zeroes, calculate mean, median, mode, standard deviation, variance, skewness, kurtosis, and fit various statistical distributions to the data.
 
 ## Usage
-To use this package, you will need to have Python installed on your machine. You can then import the package using the following command:
+
+To use this package, you need to import the necessary functions from the package in your Python script. Here is an example of how to import the functions:
 
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import norm, expon, gamma
+from data_analysis_package import (
+    check_zero_variance,
+    check_constant_values,
+    handle_missing_values,
+    handle_zeroes,
+    calculate_mean,
+    calculate_median,
+    calculate_mode,
+    calculate_standard_deviation,
+    calculate_variance,
+    calculate_skewness,
+    calculate_kurtosis,
+    fit_normal_distribution,
+    fit_uniform_distribution,
+    fit_exponential_distribution,
+    fit_gamma_distribution,
+    fit_beta_distribution,
+    fit_weibull_distribution,
+    fit_lognormal_distribution,
+    fit_pareto_distribution,
+    fit_chi_squared_distribution,
+    fit_logistic_distribution,
+    fit_cauchy_distribution
+)
 ```
 
-The package provides the following functions:
-
-### `check_zero_variance(data)`
-This function checks for zero variance in the input data.
-
-Parameters:
-- `data` (np.ndarray): Input data as a numpy array.
-
-Returns:
-- `bool`: True if the data has zero variance, False otherwise.
-
-### `check_constant_values(data)`
-This function checks for constant values in the input data.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-
-Returns:
-- `bool`: True if constant values are found, False otherwise.
-
-### `handle_missing_values(data)`
-This function handles missing values in the input data by replacing them with np.nan.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-
-Returns:
-- `numpy.ndarray`: Data array with missing values replaced.
-
-### `handle_zeroes(data)`
-This function handles zeroes in the input data by replacing them with a small non-zero value.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-
-Returns:
-- `numpy.ndarray`: Data array with zeroes replaced.
-
-### `calculate_statistics(data)`
-This function calculates various statistical measures (mean, median, mode, etc.) of the input data.
-
-Parameters:
-- `data` (numpy array): Input data
-
-Returns:
-- `statistics` (dict): Dictionary containing the calculated statistics
-
-### `fit_distribution(data)`
-This function fits various statistical distributions (normal, exponential, gamma, etc.) to the input data.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-
-Returns:
-- `str`: Name of the best-fitting distribution.
-
-### `select_best_distribution(data)`
-This function selects the best-fitting distribution based on goodness-of-fit tests.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-
-Returns:
-- `str`: Name of the best-fitting distribution.
-
-### `generate_random_samples(data)`
-This function generates random samples from the selected distribution.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-
-Returns:
-- `numpy.ndarray`: Random samples from the selected distribution.
-
-Raises:
-- `ValueError`: If the data has zero variance or constant values, or no valid data points.
-
-### `plot_histogram(data)`
-This function plots a histogram of the input data.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-
-### `plot_density(data, distribution)`
-This function plots a density plot of the fitted distribution.
-
-Parameters:
-- `data` (numpy.ndarray): Input data array.
-- `distribution` (scipy.stats.rv_continuous): Fitted distribution object.
+After importing the functions, you can use them in your code by passing the appropriate arguments. Each function has a specific purpose and required arguments. Refer to the function descriptions below for more details.
 
 ## Examples
-Here are some examples of how to use this package:
+
+Here are some examples that demonstrate how to use the different functions in this package:
+
+### Checking for Zero Variance
 
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import norm, expon, gamma
-
-# Example usage:
-
-# Generate random input data
-data = np.random.randn(1000)
-
-# Check for zero variance in the data
-zero_variance = check_zero_variance(data)
-print(f"Zero Variance: {zero_variance}")
-
-# Check for constant values in the data
-constant_values = check_constant_values(data)
-print(f"Constant Values: {constant_values}")
-
-# Handle missing values in the data
-data = handle_missing_values(data)
-
-# Handle zeroes in the data
-data = handle_zeroes(data)
-
-# Calculate statistics of the data
-statistics = calculate_statistics(data)
-print(f"Statistics: {statistics}")
-
-# Fit distribution to the data
-distribution = fit_distribution(data)
-print(f"Best-fitting Distribution: {distribution}")
-
-# Select best-fitting distribution based on goodness-of-fit tests
-best_distribution = select_best_distribution(data)
-print(f"Best-fitting Distribution (Goodness-of-Fit): {best_distribution}")
-
-try:
-    # Generate random samples from the selected distribution
-    samples = generate_random_samples(data)
-    print(f"Generated Samples: {samples}")
-except ValueError as e:
-    print(e)
-
-# Plot histogram of input data
-plot_histogram(data)
-
-if distribution is not None:
-    # Plot density plot of fitted distribution
-    if distribution == "normal":
-        distribution_object = norm(*norm.fit(data))
-    elif distribution == "exponential":
-        distribution_object = expon(*expon.fit(data))
-    elif distribution == "gamma":
-        distribution_object = gamma(*gamma.fit(data))
-
-    plot_density(data, distribution_object)
+data = np.array([1, 1, 1])
+result = check_zero_variance(data)
+print(result) # Output: True
 ```
 
-This package provides a wide range of functionalities for data analysis and statistical modeling. You can use it to check for zero variance and constant values, handle missing values and zeroes, calculate statistics, fit distributions, select the best-fitting distribution, generate random samples, and plot visualizations.
+### Checking for Constant Values
 
-Please note that this is just a brief overview of the functionalities provided by this package. For more detailed information on each function and its usage, please refer to the docstrings provided within the code.
+```python
+data = np.array([1, 2, 3])
+result = check_constant_values(data)
+print(result) # Output: False
+```
+
+### Handling Missing Values
+
+```python
+data = np.array([1, np.nan, 3])
+result = handle_missing_values(data, method='mean')
+print(result) # Output: array([1., 2., 3.])
+```
+
+### Handling Zeroes
+
+```python
+data = np.array([1, 0, 3])
+result = handle_zeroes(data)
+print(result) # Output: array([1., 2., 3.])
+```
+
+### Calculating Mean
+
+```python
+data = np.array([1, 2, 3])
+result = calculate_mean(data)
+print(result) # Output: 2.0
+```
+
+### Calculating Median
+
+```python
+data = np.array([1, 2, np.nan])
+result = calculate_median(data)
+print(result) # Output: 1.5
+```
+
+### Calculating Mode
+
+```python
+data = np.array([1, 2, 2, np.nan])
+result = calculate_mode(data)
+print(result) # Output: array([2.])
+```
+
+### Calculating Standard Deviation
+
+```python
+data = np.array([1, 2, 3])
+result = calculate_standard_deviation(data)
+print(result) # Output: 0.816496580927726
+```
+
+### Calculating Variance
+
+```python
+data = np.array([1, 2, 3])
+result = calculate_variance(data)
+print(result) # Output: 0.6666666666666666
+```
+
+### Calculating Skewness
+
+```python
+data = np.array([1, 2, 3])
+result = calculate_skewness(data)
+print(result) # Output: 0.0
+```
+
+### Calculating Kurtosis
+
+```python
+data = np.array([1, 2, 3])
+result = calculate_kurtosis(data)
+print(result) # Output: -1.5
+```
+
+### Fitting Normal Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_normal_distribution(data)
+print(result) # Output: (2.0, 0.816496580927726)
+```
+
+### Fitting Uniform Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_uniform_distribution(data)
+print(result) # Output: <scipy.stats._continuous_distns.uniform_gen object at 0x000001>
+```
+
+### Fitting Exponential Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_exponential_distribution(data)
+print(result) # Output: (1.0, 1.0)
+```
+
+### Fitting Gamma Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_gamma_distribution(data)
+print(result) # Output: (2.0, 0.816496580927726)
+```
+
+### Fitting Beta Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_beta_distribution(data)
+print(result) # Output: <scipy.stats._continuous_distns.beta_gen object at 0x000001>
+```
+
+### Fitting Weibull Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_weibull_distribution(data)
+print(result) # Output: <scipy.stats.weibull_min_gen object at 0x000001>
+```
+
+### Fitting Lognormal Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_lognormal_distribution(data)
+print(result) # Output: (0.8087349283910847, -0.7372801309070637, 2.4596014347458235)
+```
+
+### Fitting Pareto Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_pareto_distribution(data)
+print(result) # Output: (0.13441114093546422, 1.0)
+```
+
+### Fitting Chi-Squared Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_chi_squared_distribution(data)
+print(result) # Output: <scipy.stats._continuous_distns.chi2_gen object at 0x000001>
+```
+
+### Fitting Logistic Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_logistic_distribution(data)
+print(result) # Output: (-0.5, 1.2992829841302609)
+```
+
+### Fitting Cauchy Distribution
+
+```python
+data = np.array([1, 2, 3])
+result = fit_cauchy_distribution(data)
+print(result) # Output: (-0.5, 0.8660254037844386)
+```

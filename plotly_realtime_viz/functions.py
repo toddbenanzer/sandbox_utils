@@ -1,231 +1,145 @@
-equests
-import sqlite3
-import time
-import random
-from itertools import count
-import plotly.graph_objects as go
-from plotly.offline import iplot
-import plotly.express as px
-import numpy as np
 
-def fetch_data_from_api(url):
+import requests
+import websocket
+import json
+import psycopg2
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+# Fetch data from RESTful API
+def fetch_realtime_data(url):
     response = requests.get(url)
-    
     if response.status_code == 200:
         return response.json()
     else:
-        raise Exception(f"Failed to fetch data from API. Error code: {response.status_code}")
+        raise Exception("Error fetching data from API")
 
-def fetch_data_from_database(database, query):
-    conn = sqlite3.connect(database)
-    cursor = conn.cursor()
-    cursor.execute(query)
-    rows = cursor.fetchall()
+# Fetch data from WebSocket
+def fetch_realtime_data_ws(url):
+    ws = websocket.WebSocket()
+    ws.connect(url)
+    while True:
+        data = ws.recv()
+        processed_data = json.loads(data)
+        # Do something with the processed data (e.g., update Plotly charts)
+    ws.close()
+
+# Fetch data from PostgreSQL database
+def fetch_realtime_data_db():
+    conn = psycopg2.connect("dbname=mydatabase user=myuser password=mypassword host=localhost port=5432")
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM mytable")
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return rows
 
+# Preprocess and clean data
 def preprocess_data(data):
-    # Perform data preprocessing steps here
-    # For example, you can clean the data, remove outliers, convert data types, etc.
-    
-    # Return the preprocessed data
-    return preprocessed_data
+    data = data.dropna()
+    data['timestamp'] = pd.to_datetime(data['timestamp'])
+    data = data.sort_values('timestamp')
+    return data
 
-def filter_data(data, criteria):
-    filtered_data = [d for d in data if criteria(d)]
-    return filtered_data
+# Aggregate data over a specified time interval
+def aggregate_data(data, interval_minutes):
+    now = datetime.now()
+    start_time = now - timedelta(minutes=interval_minutes)
+    aggregated_data = [entry for entry in data if entry['timestamp'] >= start_time]
+    aggregated_value = sum(entry['value'] for entry in aggregated_data)
+    return aggregated_value
 
-def transform_data(data):
-    """
-    Transforms the given data into a suitable format for Plotly.
-    
-    Parameters:
-    data (list or pandas DataFrame): The raw data to be transformed.
-    
-    Returns:
-    plotly.graph_objects.Figure: The transformed data in a Plotly figure.
-    """
-    # Check if the input data is a pandas DataFrame
-    if isinstance(data, pd.DataFrame):
-        # Convert the DataFrame to a list of dictionaries
-        data = data.to_dict('records')
+# Filter real-time data based on specific conditions
+def filter_realtime_data(data, condition):
+    return [record for record in data if condition(record)]
+
+# Transform real-time data into a desired format
+def transform_data(real_time_data):
+    return [data_point * 2 for data_point in real_time_data]
+
+# Handle missing or null values in real-time data
+def handle_missing_values(data):
+    data.replace("", float("NaN"), inplace=True)
+    data.ffill(inplace=True)
+    return data
+
+# Handle outliers in real-time data using z-score method
+def handle_outliers(data, threshold=3):
+    data = np.array(data)
+    z_scores = (data - np.mean(data)) / np.std(data)
+    outlier_indices = np.where(np.abs(z_scores) > threshold)[0]
+    processed_data = np.delete(data, outlier_indices)
+    return processed_data
+
+# Normalize or scale real-time data using Min-Max scaling technique
+def normalize_data(data):
+    min_val, max_val = min(data), max(data)
+    scaled_data = [(x - min_val) / (max_val - min_val) for x in data]
+    return scaled_data
+
+# Calculate descriptive statistics of real-time data
+def calculate_statistics(data):
+    statistics = {
+        'Mean': data.mean(),
+        'Median': data.median(),
+        'Minimum': data.min(),
+        'Maximum': data.max(),
+        'Standard Deviation': data.std()
+        }
         
-    # Create an empty figure
-    fig = go.Figure()
-    
-    # Iterate over each record in the data
-    for record in data:
-        # Extract the x and y values from the record
-        x = record['x']
-        y = record['y']
-        
-        # Add a new trace to the figure with the x and y values
-        fig.add_trace(go.Scatter(x=x, y=y))
-    
-    # Return the transformed data as a Plotly figure
-    return fig
+return statistics
 
+# Create line charts with real-time updates.
 def create_realtime_line_chart():
-    # Create an empty figure with initial data
-    fig = go.Figure()
+fig, x_data, y_data = go.Figure(), [], []
 
-    # Create a scatter trace for the initial data points
-    fig.add_trace(go.Scatter(x=[], y=[], mode='lines', name='Real-time Data'))
+def update_line_chart():
+new_x, new_y = np.random.randint(1, 10), np.random.randint(1, 10)
+x_data.append(new_x), y_data.append(new_y)
+fig.add_trace(go.Scatter(x=x_data, y=y_data, mode='lines'))
 
-    # Update the figure layout
-    fig.update_layout(title='Real-time Line Chart', xaxis_title='Time', yaxis_title='Data')
+interval_ms, timer = 1000, go.FigureWidget.Timer(interval=interval_ms)
+timer.on_timer(update_line_chart)
 
-    # Start updating the chart in real-time
-    while True:
-        # Fetch new data (replace this with your own data fetching logic)
-        new_data = randint(0, 10)
+fig.show()
 
-        # Preprocess the data (replace this with your own data preprocessing logic)
-        processed_data = new_data
+# Create bar charts with real-time updates.
+def create_realtime_bar_chart():
+x_data, y_data, fig = ['Category 1', 'Category 2', 'Category 3'], [randint(0, 10)]*3, go.Figure(data=[go.Bar(x=x_data, y=y_data)])
+while True:
+fig.data[0].y=[randint(0, 10)]*3; fig.show()
 
-        # Append the new data to the existing trace
-        fig.add_trace(go.Scatter(x=[len(fig.data[0].x)], y=[processed_data], mode='lines', name='Real-time Data'))
+create_realtime_bar_chart()
 
-        # Update the figure layout and display the updated chart
-        fig.update_layout()
-        fig.show()
+# Create scatter plots with real-time updates.
+def create_realtime_scatter_plot(x_data,y_Data):
+fig=go.Figure(**{'data':go.Scatter(x=x_Data,y=y_Data,'mode':'markers')})
 
-        # Sleep for a short interval to simulate real-time updates (replace this with your own timing logic)
-        sleep(1)
+def update_scatter_plot(fig,x_Data,y_Data):fig.data[0].x=x_Data;fig.data[0].y=y_Data # Updates the scatter plot in real-time.
 
-def create_realtime_bar_chart(data):
-    fig = px.bar(data, x='x', y='y')
-    fig.update_layout(title='Real-time Bar Chart')
-    
-    while True:
-        # Update data
-        # For example, you can fetch real-time data from an API
-        new_data = fetch_realtime_data()
-        
-        # Preprocess data
-        # For example, you can aggregate or transform the data
-        
-        # Update the chart
-        fig.data[0].y = new_data['y']
-        
-        # Display the updated chart
-        fig.show()
-        
-        # Pause for some time before updating again
-        time.sleep(1)
+fig.update_layout(title="Real-time Scatter Plot",updatemenus=[dict(type="buttons",buttons=[dict(label="Update",method="update",args=[None,{ "x":x_dat,"y":y_dat}])])]); fig.show()
 
-def create_realtime_scatterplot():
-    # Create empty lists to store the x and y values
-    x_data = []
-    y_data = []
+create_realtime_scatter_plot([1,2],[4,5])
 
-    # Create a counter to keep track of the x values
-    index = count()
+# Create area charts with real-time updates.
+def create_realtime_area_chart(x_dat,y_dat,tit): fig=make_subplots(rows=1); fig.add_trace(go.Scatter(x=x_dat,y=y_dat,'fill':'tozeroy','mode':'lines', line=dict(color='rgba(0, 0,)')),name='Area Chart'); fig.update_layout(title=tit,'xaxis_title':'X-','yaxis_title':'Y-'); fig.show()
 
-    # Create a Figure object
-    fig = go.Figure()
+# Create pie charts with real-time updates.
+def create_pie_chart_realtim(d):fig=go.Figure(**{'data':[go.Pie(labels=d.keys(),values=d.values())]}); subplots_titles,list(subplot_titles.items()),subfigs=sp.make_subplots(1,len(d),subplot_titles=subplot_titles);
 
-    def update_plot():
-        # Generate new data points
-        x = next(index)
-        y = random.randint(0, 10)
+for i,label in enumerate(d.keys()):subfigs.add_trace(go.Pie(labels=[label],values=[d[label]]),row=1,col=i+1) # Adds initial trace to each subplot.
+fig.show();stream_ids=[s['token']for s in fig.data[0].stream];
+while True:new_d={label:random.randint(1,)for label in d.keys()};for i,label in enumerate(new_d.keys()):subfigs.update_traces(values=[[new_d[label]]],selector=dict(type='pie',labels=[label]),row=1,col=i+1); subfigs.show();for i,s_id in enumerate(stream_ids):fig.data[i].stream(dict(labels=[subplot_titles[i]],values=[new_d[subplot_titles[i]]]),token=s_id)
 
-        # Append new data points to the lists
-        x_data.append(x)
-        y_data.append(y)
+# Create heatmaps with real-time updates.
+def create_realtime_heatmap():data=np.random.rand(10); fig.go.Figure(**{'data':go.Heatmap(z=data)}); fig.update_layout(title="Real-Time Heatmap",'xaxis_title':'X-.','yaxis_title':'Y-.') # Initialize the figure and layout.
 
-        # Update the scatter plot trace with the new data
-        fig.data[0].x = x_data
-        fig.data[0].y = y_data
+def update_heatmap(): new_dat=np.random.rand(10); fig.data[0].z=new_dat; fig.update_layout(); # Updates the heat map at a specified interval.
 
-        # Redraw the plot
-        fig.update_layout(autosize=False, width=800, height=400)
-        fig.show()
+interval,set(fig.updatemenus,[dict(type="buttons",buttons=dict(label="Play",method="animate",args=None,[{"frame":{"duration":update_interval,"redraw":True},"fromcurrent":True,"transition":{"duration":}}]))])
 
-    # Update the plot every second
-    while True:
-        update_plot()
-        time.sleep(1)
+return fig.show()
 
-def create_realtime_pie_chart(data):
-    # Define initial data for the pie chart
-    pie_data = [go.Pie(labels=data.keys(), values=data.values())]
-
-    # Define layout for the pie chart
-    layout = go.Layout(title='Real-Time Pie Chart')
-
-    # Create Figure object with initial data and layout
-    fig = go.Figure(data=pie_data, layout=layout)
-
-    # Display the initial pie chart
-    iplot(fig)
-
-    while True:
-        # Update the data for the pie chart
-        pie_data[0].values = list(data.values())
-
-        # Update the Figure object with updated data
-        fig.data = pie_data
-
-        # Redraw the updated pie chart
-        iplot(fig)
-
-        # Wait for 1 second before updating again
-        time.sleep(1)
-
-def create_realtime_heatmap():
-    # Create initial data for the heatmap
-    data = np.random.rand(10, 10)
-
-    fig = go.Figure(data=go.Heatmap(
-        z=data,
-        colorscale='Viridis'))
-
-    # Function to update the heatmap data in real-time
-    def update_heatmap():
-        # Update the heatmap data with new values
-        for i in range(10):
-            for j in range(10):
-                data[i][j] += random.uniform(-0.1, 0.1)
-
-        # Update the heatmap trace with the new data
-        fig.data[0].z = data
-
-        # Redraw the figure to reflect the updated data
-        fig.update_layout()
-
-    # Schedule the update function to be called every second (1000 milliseconds)
-    fig.update_layout(updatemenus=[dict(type="buttons", buttons=[dict(label="Play",
-                                                                  method="animate",
-                                                                  args=[None, {"frame": {"duration": 1000, "redraw": False},
-                                                                               "fromcurrent": True,
-                                                                               "transition": {"duration": 500,
-                                                                                              "easing": "quadratic-in-out"}}])])])
-
-    return fig
-
-
-def update_chart(new_x, new_y):
-    fig.add_trace(go.Scatter(x=[new_x], y=[new_y], mode='lines', name='Real-time Data'))
-    fig.update_layout(xaxis=dict(range=[min(fig.data[0].x), max(fig.data[0].x)]))
-    fig.show()
-
-def fetch_data(url):
-    try:
-        response = requests.get(url)
-        # Process the data here
-        # ...
-        return processed_data
-    except requests.exceptions.RequestException as e:
-        print(f"Error occurred while fetching data: {e}")
-        return None
-
-# Example usage
-data_url = "https://api.example.com/data"
-data = fetch_data(data_url)
-if data is not None:
-    # Visualize the data using Plotly
-    # ...
-else:
-    # Handle the error and take appropriate action
-    # ..

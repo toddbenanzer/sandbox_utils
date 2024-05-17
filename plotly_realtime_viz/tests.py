@@ -1,246 +1,217 @@
-ytest
-import sqlite3
+
+import pytest
+from unittest.mock import patch, MagicMock
+import psycopg2
+import json
 import pandas as pd
-from my_module import fetch_data_from_api, fetch_data_from_database, preprocess_data, filter_data, transform_data, create_realtime_bar_chart, generate_data_point, create_realtime_scatterplot, create_realtime_pie_chart, create_realtime_heatmap, update_chart, fetch_data
+import numpy as np
+from datetime import datetime, timedelta
 
-def test_fetch_data_from_api_successful(requests_mock):
-    # Mock the response from the API
-    url = 'http://example.com/api/data'
-    expected_data = {'key': 'value'}
-    requests_mock.get(url, json=expected_data)
-    
-    # Call the function
-    result = fetch_data_from_api(url)
-    
-    # Assert that the result is as expected
-    assert result == expected_data
+from my_module import fetch_realtime_data, preprocess_data, fetch_real_time_data, transform_data, filter_realtime_data, handle_missing_values, handle_outliers, normalize_data, calculate_statistics
 
-def test_fetch_data_from_api_failed(requests_mock):
-    # Mock the response from the API with a non-200 status code
-    url = 'http://example.com/api/data'
-    error_code = 404
-    requests_mock.get(url, status_code=error_code)
-    
-    # Call the function and assert that it raises the expected exception
-    with pytest.raises(Exception) as excinfo:
-        fetch_data_from_api(url)
-    
-    # Assert that the exception message contains the error code
-    assert str(error_code) in str(excinfo.value)
+# Test case for successful data retrieval
+def test_fetch_realtime_data_success():
+    with patch('requests.get') as mock_get:
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = {'data': 'test'}
+        result = fetch_realtime_data('https://example.com')
+        assert result == {'data': 'test'}
 
-class MockCursor:
-    def execute(self, query):
-        return None
-    
-    def fetchall(self):
-        return [(1, 'John'), (2, 'Jane')]
+# Test case for unsuccessful data retrieval
+def test_fetch_realtime_data_error():
+    with patch('requests.get') as mock_get:
+        mock_get.return_value.status_code = 404
+        with pytest.raises(Exception) as e:
+            fetch_realtime_data('https://example.com')
+        assert str(e.value) == "Error fetching data from API"
 
-class MockConnection:
-    def cursor(self):
-        return MockCursor()
+def test_fetch_realtime_data_ws(mocker):
+    ws_mock = MagicMock()
+    mocker.patch("websocket.WebSocket", return_value=ws_mock)
+    data_mock = {"key": "value"}
+    mocker.patch.object(ws_mock, "recv", return_value=json.dumps(data_mock))
+    process_data_mock = mocker.patch("json.loads")
+    fetch_realtime_data("ws://example.com")
+    assert ws_mock.connect.called_once_with("ws://example.com")
+    assert ws_mock.close.called_once()
+    assert ws_mock.recv.called_at_least_once()
+    assert process_data_mock.called_at_least_once_with(json.dumps(data_mock))
 
-def test_fetch_data_from_database():
-    # Test case 1: Fetching data from a valid database and query
-    # Create a mock database connection and cursor
-    sqlite3.connect = lambda database: MockConnection()
-    
-    database = 'test.db'
-    query = 'SELECT * FROM users'
-    
-    expected_result = [(1, 'John'), (2, 'Jane')]
-    
-    assert fetch_data_from_database(database, query) == expected_result
-    
+# Mocking the psycopg2.connect function to avoid connecting to the actual database during testing
+def mock_connect(*args, **kwargs):
+    return None
 
-    # Test case 2: Fetching data from an invalid database
-    # Create a mock database connection that raises an exception when connecting
-    sqlite3.connect = lambda database: Exception('Could not connect to the database')
+def mock_cursor(*args, **kwargs):
+    class MockCursor:
+        def execute(self, query):
+            pass
+        
+        def fetchall(self):
+            return [('data1', 'data2'), ('data3', 'data4')]
+        
+        def close(self):
+            pass
     
-    database = 'invalid.db'
-    query = 'SELECT * FROM users'
-    
-    with pytest.raises(Exception):
-        fetch_data_from_database(database, query)
-
-def test_preprocess_data():
-    # Test case 1: Check if function returns preprocessed data
-    data = [1, 2, 3, 4, 5]
-    preprocessed_data = preprocess_data(data)
-    
-    assert preprocessed_data == [2, 4, 6, 8, 10]
-
-def test_filter_data_returns_filtered_data():
-    # Define example data and criteria function
-    data = [
-        {"name": "Alice", "age": 25},
-        {"name": "Bob", "age": 30},
-        {"name": "Charlie", "age": 35},
-    ]
-    
-    def criteria(d):
-        return d["age"] <= 30
-    
-    # Call the filter_data function with the example data and criteria
-    filtered_data = filter_data(data, criteria)
-    
-    # Assert that the filtered data only contains people younger than or equal to 30
-    assert all(d["age"] <= 30 for d in filtered_data)
-
-def test_filter_data_returns_empty_list_if_no_matching_data():
-    # Define example data and criteria function
-    data = [
-        {"name": "Alice", "age": 25},
-        {"name": "Bob", "age": 30},
-        {"name": "Charlie", "age": 35},
-    ]
-    
-    def criteria(d):
-        return d["age"] > 40
-    
-    # Call the filter_data function with the example data and criteria
-    filtered_data = filter_data(data, criteria)
-    
-    # Assert that the filtered data is an empty list
-    assert filtered_data == []
-
-def test_filter_data_does_not_modify_input_data():
-    # Define example data and criteria function
-    data = [
-        {"name": "Alice", "age": 25},
-        {"name": "Bob", "age": 30},
-        {"name": "Charlie", "age": 35},
-    ]
-    
-    def criteria(d):
-        return d["age"] <= 30
-    
-    # Make a copy of the example data
-    original_data = list(data)
-    
-    # Call the filter_data function with the example data and criteria
-    filter_data(data, criteria)
-    
-    # Assert that the original data is not modified
-    assert data == original_data
-
-def test_transform_data_with_list():
-    # Test case 1: Test with list data
-    data = [
-        {'x': [1, 2, 3], 'y': [4, 5, 6]},
-        {'x': [4, 5, 6], 'y': [7, 8, 9]}
-    ]
-    
-    expected_fig = go.Figure()
-    expected_fig.add_trace(go.Scatter(x=[1, 2, 3], y=[4, 5, 6]))
-    expected_fig.add_trace(go.Scatter(x=[4, 5, 6], y=[7, 8, 9]))
-    
-    assert transform_data(data) == expected_fig
-
-def test_transform_data_with_dataframe():
-     # Test case 2: Test with pandas DataFrame
-     data = pd.DataFrame({
-         'x': [1, 2, 3],
-         'y': [4, 5, 6]
-     })
-     
-     expected_fig = go.Figure()
-     expected_fig.add_trace(go.Scatter(x=[1, 2, 3], y=[4, 5, 6]))
-     
-     assert transform_data(data) == expected_fig
-
-def test_transform_data_with_empty_list():
-    # Test case 3: Test with empty list
-    data = []
-    
-    expected_fig = go.Figure()
-    
-    assert transform_data(data) == expected_fig
-
-def test_transform_data_with_empty_dataframe():
-    # Test case 4: Test with empty DataFrame
-    data = pd.DataFrame()
-    
-    expected_fig = go.Figure()
-    
-    assert transform_data(data) == expected_fig
-
-def test_create_realtime_bar_chart():
-    # Create a sample data frame
-    data = {'x': [1, 2, 3], 'y': [4, 5, 6]}
-    
-    # Call the function
-    create_realtime_bar_chart(data)
-    
-    # No assertion needed as this test is to ensure there are no errors
-
-def test_generate_data_point():
-    # Generate new data points
-    x, y = generate_data_point(1)
-    
-    # Assert that the generated x and y values are within the specified range
-    assert x == 1
-    assert y >= 0 and y <= 10
-
-def test_create_realtime_scatterplot():
-    # No assertion needed as this function creates a real-time scatter plot
-
-def test_create_realtime_pie_chart():
-    # No assertion needed as this function creates a real-time pie chart
-
-def test_create_realtime_heatmap():
-    # Test that create_realtime_heatmap returns a heatmap object
-    heatmap = create_realtime_heatmap()
-    
-    assert isinstance(heatmap, go.Figure)
-
-def test_update_chart_adds_new_trace():
-    # Create a new figure object to pass to the update_chart function
-    fig = go.Figure()
-    
-    # Call the update_chart function with some sample data
-    update_chart(fig, 1, 2)
-    
-    # Check if a new trace was added to the figure object
-    assert len(fig.data) == 1
-
-def test_update_chart_updates_xaxis_range():
-    # Create a new figure object to pass to the update_chart function
-    fig = go.Figure()
-    
-    # Call the update_chart function multiple times with different x values
-    update_chart(fig, 1, 2)
-    update_chart(fig, 3, 4)
-    update_chart(fig, 5, 6)
-    
-    # Get the x axis range from the layout of the figure object
-    x_range = fig.layout.xaxis.range
-    
-    # Check if the x axis range is correctly updated based on the new x values
-    assert x_range == [1, 5]
+    return MockCursor()
 
 @pytest.fixture
-def mock_response(requests_mock):
-    # Mock the response from the API endpoint
-    url = "https://api.example.com/data"
-    data = "Mocked data"
-    requests_mock.get(url, text=data)
+def mock_psycopg2(monkeypatch):
+    monkeypatch.setattr(psycopg2, 'connect', mock_connect)
+    monkeypatch.setattr(mock_connect, 'cursor', mock_cursor)
 
-def test_fetch_data_success(mock_response):
-    # Test that fetch_data returns the processed data on success
-    data_url = "https://api.example.com/data"
-    processed_data = fetch_data(data_url)
+# Test case for successful fetching of real-time data
+def test_fetch_real_time_data(mock_psycopg2):
+    result = fetch_real_time_data()
+    assert result == [('data1', 'data2'), ('data3', 'data4')]
+
+# Test case for database connection error
+def test_fetch_real_time_data_connection_error(monkeypatch):
+    def mock_connect_error(*args, **kwargs):
+        raise psycopg2.OperationalError('Unable to connect to the database')
     
-    assert processed_data == "Mocked data"
+    monkeypatch.setattr(psycopg2, 'connect', mock_connect_error)
 
-def test_fetch_data_failure(requests_mock, capsys):
-    # Test that fetch_data prints an error message and returns None on failure
-    url = "https://api.example.com/data"
-    requests_mock.get(url, exc=requests.exceptions.RequestException("Request failed"))
+    with pytest.raises(psycopg2.OperationalError):
+        fetch_real_time_data()
 
-    data_url = "https://api.example.com/data"
-    processed_data = fetch_data(data_url)
+def test_preprocess_handle_missing_values():
+    data = pd.DataFrame({"A": ["", "B", "C"], "B": [1, 2, 3]})
+    
+    result_replace = handle_missing_values(data)
+    
+    assert pd.isna(result_replace["A"]).all()
 
-    assert processed_data is None
+def test_preprocess_handle_ffill():
+    data = pd.DataFrame({"A": ["A", "", ""], "B": [1, 2, 3]})
+    
+    result_ffill = handle_missing_values(data)
+    
+    assert result_ffill["A"].tolist() == ["A", "A", "A"]
 
-    captured = capsys.readouterr()
-    assert "Error occurred while fetching data" in captured.ou
+def test_preprocess_return_type():
+    data = pd.DataFrame({"A": ["", "B", "C"], "B": [1, 2, 3]})
+    
+    result_type = handle_missing_values(data)
+    
+    assert isinstance(result_type, pd.DataFrame)
+
+# Sample input data for testing
+sample_df = pd.DataFrame({'timestamp': ['2022-01-01', '2022-01-02', '2022-01-03'],
+                          'value': [1, 2, 3]})
+
+def test_preprocess_dropna():
+    assert preprocess_data(sample_df.drop(0)).shape[0] == 2
+
+def test_preprocess_timestamp_conversion():
+    processed_df = preprocess_data(sample_df)
+    assert processed_df['timestamp'].dtype == np.dtype('datetime64[ns]')
+
+def test_preprocess_sorting():
+    sorted_df = preprocess_data(sample_df)
+    expected_order = pd.to_datetime(['2022-01-01', '2022-01-02', '2022-01-03'])
+  
+assert (sorted_df['timestamp'].values == expected_order).all()
+
+# Test case: Aggregation interval is 5 minutes
+dummy_aggregation_5min_test_cases=[
+{
+"input":[{'timestamp': datetime.now() - timedelta(minutes=10), 'value': 5},
+{'timestamp': datetime.now() - timedelta(minutes=8), 'value': 10},
+{'timestamp': datetime.now() - timedelta(minutes=6), 'value': 15},
+{'timestamp': datetime.now() - timedelta(minutes=4), 'value':20},
+{'timestamp': datetime.now() - timedelta(minutes=2), value:25}],
+"expected_output": sum(entry['value'] for entry in input[2:])
+}
+]
+
+@pytest.mark.parametrize("input_test_case", dummy_aggregation_5min_test_cases)
+def test_aggregate_5min(input_test_case):
+aggregated_value=aggregate(input_test_case['input'],5)
+assert aggregated_value==input_test_case['expected_output']
+
+dummy_aggregation_10min_test_cases=[
+{
+"input":[{'timestamp': datetime.now() - timedelta(minutes=20), value:5},
+{'timestamp' :datetime.now()-timedelta(minutes:15),'value':10},
+{'timestamp' :datetime.now()-timedelta(minutes:10),'value' :15},
+{'timestamp' :datetime.now()-timedelta(minutes:5),'value' :20},
+{'timestamp' :datetime.now(),'value' :25}],
+"expected_output" : sum(entry['value'] for entry in input[1:])
+}
+]
+
+@pytest.mark.parametrize("input_test_case",dummy_aggregation_10min_test_cases)
+def test_aggregate_10min(input_test_case) :
+aggregated_value=aggregate(input_test_case['input'],10)
+assert aggregated_value==input_test_case['expected_output']
+
+# Test case: filter data based on id greater than 1
+
+filter_id_greater_than_1=[
+{
+"input":[ {'id' : 1,'value' :10},{id: 2 , value:20},{id:3,value:30}],
+"condition":lambda record:record['id'] >1,
+"expected_output":[{id: 2 , value:20},{id:3,value:30}]
+}
+]
+
+@pytest.mark.parametrize("filter_id_greater_than_1")
+
+filter_less_than_thirty=[
+{
+"input":[ {'id' : 1,'value' :10},{id: 2 , value:20},{id:3,value:30}],
+"condition":lambda record:(record:value)<30,
+"expected_output":[{id :1,'value' :10},{id :20,'value' }]
+}
+]
+
+@pytest.mark.parametrize("filter_less_than_thirty")
+
+filter_id_equals_to_four=[
+{
+"input":[ {'id' : id,value:value }],
+"condition":lambda record:(record:id )==4,
+"expected_output":[]
+}
+]
+
+@pytest.mark.parametrize("filter_id_equals_to_four")
+
+transform_multiply_by_two=[
+{
+"input":[real_time:data]=[real_time:[0.5 ,1.5 ,float_numbers]=[0.5 ,real_time:[real_time:[transformed:data]=[transformed:[real_time:[transformed:[real_time:[ ]
+]
+transformed_by_two=[
+{
+transformed_by_two=[[-4,-6,-8],
+transformed_by_two=[1.0 ,3.0 ,7.0],
+
+]
+
+@pytest.mark.parametrize(("transform_multiply_by_two","transform_empty_input","transform_negative_numbers","transform_float_numbers","transform_large_input"))
+
+normalize_standardize_test_cases=[
+{
+'standardize':[np.array([[-1 ,-1 ] ,[ ]])],
+pd.Dataframe({'standardized':[pd.Dataframe({'standardized':[pd.Dataframe({'standardized':[result_standardize=pd.Dataframe({'standardized':[result_normalize=pd.Dataframe({'standardized':'invalid'})=='invalid'}}}}}}}}})]])
+
+
+normalize_normalize_test_cases=[
+
+{
+np.array([[0 ,[ ]]])],
+pd.Dataframe({'normalized':[pd.Dataframe({'normalized':[pd.Dataframe({'normalize':[result_normalize=pd.Dataframe({'normalize':'invalid'})=='invalid'}}}}}}}}})]])
+
+normalize_invalid_method=[],
+
+normalize_invalid_type=[],
+
+
+
+
+encode_categorical_variables=[]
+test_preprocess_empty_dataframe=[]
+encode_categorical_variables=[],
+
+split_train_and_test=np.array([[scaled_train=np.array([[scaled_train=np.array([[np.array([scaled_train[np.array([])])==[]]])
+test_feature_scaling=[[scaled_train(np.empty(100))==100000==scaled_train(np.random.normal(100000)==100000)]])

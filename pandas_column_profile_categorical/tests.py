@@ -1,86 +1,101 @@
 
 import pandas as pd
-import numpy as np
-from scipy.stats import chi2_contingency
+import pytest
 
-def calculate_phi_coefficient(dataframe, variable1, variable2):
-    contingency_table = pd.crosstab(dataframe[variable1], dataframe[variable2])
-    chi2, _, _, _ = chi2_contingency(contingency_table)
-    n = contingency_table.sum().sum()
-    phi_coefficient = np.sqrt(chi2 / n)
-    return phi_coefficient
+# Test case 1: column with no unique categories
+def test_calculate_unique_categories_no_unique():
+    column = pd.Series(['A', 'A', 'A'])
+    assert calculate_unique_categories(column) == 1
 
-def calculate_chi_square(dataframe, variable1, variable2):
-    contingency_table = pd.crosstab(dataframe[variable1], dataframe[variable2])
-    chi2, p_value, _, _ = chi2_contingency(contingency_table)
-    return chi2, p_value
+# Test case 2: column with one unique category
+def test_calculate_unique_categories_one_unique():
+    column = pd.Series(['A', 'A', 'B'])
+    assert calculate_unique_categories(column) == 2
 
-def calculate_cramers_v(variable1, variable2):
-    confusion_matrix = pd.crosstab(variable1, variable2)
-    chi2, _, _, _ = chi2_contingency(confusion_matrix)
-    n = confusion_matrix.sum().sum()
-    v_cramer = np.sqrt(chi2 / (n * (min(confusion_matrix.shape) - 1)))
-    return v_cramer
+# Test case 3: column with multiple unique categories
+def test_calculate_unique_categories_multiple_unique():
+    column = pd.Series(['A', 'B', 'C'])
+    assert calculate_unique_categories(column) == 3
 
-def perform_one_way_anova(dataframe, categorical_column, continuous_column):
-    groups = dataframe.groupby(categorical_column)[continuous_column].apply(list).values
-    f_statistic, p_value = stats.f_oneway(*groups)
-    return f_statistic, p_value
+# Test case 4: empty column
+def test_calculate_unique_categories_empty():
+    column = pd.Series([])
+    assert calculate_unique_categories(column) == 0
 
-def perform_factor_analysis(dataframe):
-    result = dataframe.isnull().sum().rename('Count')
-    result['Percentage'] = result / len(dataframe)
-    return result
+# Test case 5: column with mixed data types
+def test_calculate_unique_categories_mixed_data_types():
+    column = pd.Series(['A', 1, True])
+    with pytest.raises(TypeError):
+        calculate_unique_categories(column)
 
-def handle_missing_data(dataframe):
-    return dataframe.dropna()
+@pytest.fixture
+def sample_data():
+    return pd.Series(['apple', 'banana', 'apple', 'orange', 'banana', 'banana'])
 
-def generate_bar_plot(dataframe, column_name):
-    dataframe[column_name].value_counts().plot(kind='bar')
+# Test case to check if the output is correct for a given input
+def test_calculate_category_count(sample_data):
+    expected_output = pd.Series([2, 3, 1], index=['banana', 'apple', 'orange'])
+    assert calculate_category_count(sample_data).equals(expected_output)
 
-def generate_count_plot(dataframe, column_name):
-    sns.countplot(x=column_name, data=dataframe)
+# Test case to check if the output is a pandas Series
+def test_calculate_category_count_output_type(sample_data):
+    assert isinstance(calculate_category_count(sample_data), pd.Series)
 
-def generate_pie_chart(dataframe, column_name):
-    dataframe[column_name].value_counts().plot.pie()
+# Test case to check if the output is empty for an empty input
+def test_calculate_category_count_empty_input():
+    empty_data = pd.Series([])
+    assert calculate_category_count(empty_data).empty
 
-def perform_tukey_hsd(dataframe, continuous_column, categorical_column):
-    tukey_results = mc.MultiComparison(dataframe[continuous_column], dataframe[categorical_column]).tukeyhsd()
-    return str(tukey_results)
+# Test case to check if the output is correct for a single category input
+def test_calculate_category_count_single_category():
+    single_category = pd.Series(['apple'] * 10)
+    expected_output = pd.Series([10], index=['apple'])
+    assert calculate_category_count(single_category).equals(expected_output)
 
-def calculate_point_biserial_correlation(binary_column, categorical_column):
-    point_biserial_correlation, p_value = stats.pointbiserialr(binary_column, pd.factorize(categorical_column)[0])
-    return point_biserial_correlation, p_value
+# Test case 1: Test with a column containing only one category
+def test_calculate_category_percentage_single_category():
+    # Create a column with a single category
+    column = pd.Series(['A', 'A', 'A'])
 
-def calculate_gini_index(dataframe, column_name):
-    value_counts = dataframe[column_name].value_counts()
-    proportions = value_counts / len(dataframe)
-    gini_index = 1 - (proportions ** 2).sum()
-    return gini_index
+    # Call the function
+    result = calculate_category_percentage(column)
 
-def remove_trivial_columns(dataframe):
-    return dataframe.loc[:, (dataframe.nunique() > 1)]
+    # Check if the result is correct
+    assert len(result) == 1  # There should be only one row in the result
+    assert result['Category'].iloc[0] == 'A'  # The category should be 'A'
+    assert result['Percentage'].iloc[0] == 100.0  # The percentage should be 100%
 
-def calculate_missing_percentage(column):
-    return column.isnull().mean() * 100
+# Test case 2: Test with a column containing multiple categories
+def test_calculate_category_percentage_multiple_categories():
+    # Create a column with multiple categories
+    column = pd.Series(['A', 'B', 'A', 'C', 'B'])
 
-def calculate_non_null_count(column):
-    return column.notnull().sum()
+    # Call the function
+    result = calculate_category_percentage(column)
 
-def count_null_values(column):
-    return column.isnull().sum()
+    # Check if the result is correct
+    assert len(result) == 3  # There should be three rows in the result
+    assert sorted(result['Category'].tolist()) == ['A', 'B', 'C']  # The categories should be in alphabetical order
+    assert sorted(result['Percentage'].tolist()) == [40.0, 40.0, 20.0]  # The percentages should be correctly calculated
 
-def calculate_empty_prevalence(column):
-    return column.isna().mean()
+# Test case 3: Test with an empty column
+def test_calculate_category_percentage_empty_column():
+    # Create an empty column
+    column = pd.Series([])
 
-def calculate_missing_values(column):
-    return column.isna().mean()
+    # Call the function
+        result = calculate_category_percentage(column)
 
-def perform_pearson_correlation(dataframe, variable1, variable2):
-    pearson_correlation_coefficient, p_value = stats.pearsonr(dataframe[variable1], dataframe[variable2])
-    return pearson_correlation_coefficient, p_value
+        # Check if the result is correct 
+        assert len(result) == 0   # The result should be an empty dataframe 
 
-def calculate_entropy(dataframe, column_name):
-    value_counts = dataframe[column_name].value_counts(normalize=True)
-    entropy = -np.sum(value_counts * np.log2(value_counts))
-    return entropy
+        # Test case   :Test with a   containing NaN values 
+        def   () -> None : 
+        """Test handling of NaN values."""  
+        df_ : DataFrame  
+        df_["X"].fillna(df_[ "X"].mean(), inplace=True)
+        
+        def   (): 
+            """Test that function correctly replaces NaN values."""  
+            df_ : DataFrame  
+            df_["Y"].replace(to_replace=np.nan, value="unknown", inplace=True)

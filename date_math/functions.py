@@ -1,561 +1,994 @@
-etime import datetime, timedelta
 
+from datetime import datetime, timedelta
+import calendar
 
-def add_days(date_str: str, num_days: int) -> str:
-    """
-    Add the specified number of days to the given date.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        num_days (int): The number of days to add.
-        
-    Returns:
-        str: The new date after adding the specified number of days in 'yyyy-mm-dd' format.
-    """
-    # Convert the date string to a datetime object
-    date = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Add the specified number of days to the date
-    new_date = date + timedelta(days=num_days)
-
-    # Return the new date as a string in yyyy-mm-dd format
-    return new_date.strftime('%Y-%m-%d')
-
-
-def subtract_days(date_str: str, num_days: int) -> str:
-    """
-    Subtract the specified number of days from the given date.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        num_days (int): The number of days to subtract.
-        
-    Returns:
-        str: The new date after subtracting the specified number of days in 'yyyy-mm-dd' format.
-    """
-    # Convert the date string to a datetime object
-    date = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Subtract the specified number of days from the date
-    new_date = date - timedelta(days=num_days)
-
-    # Return the new date as a string in yyyy-mm-dd format
-    return new_date.strftime('%Y-%m-%d')
-
-
-def add_weeks(date: datetime, num_weeks: int) -> datetime:
-    """
-    Add the specified number of weeks to the given date.
-    
-    Args:
-        date (datetime): The initial date.
-        num_weeks (int): The number of weeks to add.
-        
-    Returns:
-        datetime: The new date after adding the specified number of weeks.
-    """
-    return date + timedelta(weeks=num_weeks)
-
-
-def subtract_weeks(date: datetime, num_weeks: int) -> datetime:
-    """
-    Subtract the specified number of weeks from the given date.
-    
-    Args:
-        date (datetime): The initial date.
-        num_weeks (int): The number of weeks to subtract.
-        
-    Returns:
-        datetime: The new date after subtracting the specified number of weeks.
-    """
-    return date - timedelta(weeks=num_weeks)
-
-
-def add_months(date_str: str, num_months: int) -> str:
-    """
-    Add the specified number of months to the given date, considering month-end dates.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        num_months (int): The number of months to add.
-        
-    Returns:
-        str: The new date after adding the specified number of months in 'yyyy-mm-dd' format.
-    """
-    # Convert the date string to a datetime object
-    date = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Calculate the new year and month values
-    new_year = date.year + (date.month + num_months - 1) // 12
-    new_month = (date.month + num_months) % 12
-
-    # Handle the case when the new month is December
-    if new_month == 0:
-        new_month = 12
-        new_year -= 1
-
-    # Calculate the last day of the new month
-    last_day_of_new_month = (datetime(new_year, new_month + 1, 1) - timedelta(days=1)).day
-
-    # Handle the case when the original day is greater than the last day of the new month
-    if date.day > last_day_of_new_month:
-        new_day = last_day_of_new_month
-    else:
-        new_day = date.day
-
-    # Create a new datetime object with the updated year, month, and day values
-    new_date = datetime(new_year, new_month, new_day)
-
-    # Convert the datetime object back to a string in yyyy-mm-dd format
-    new_date_str = new_date.strftime('%Y-%m-%d')
-
-    return new_date_str
-
-
-def subtract_months(date_str: str, num_months: int) -> str:
-    """
-    Subtract the specified number of months from the given date, considering month-end dates.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        num_months (int): The number of months to subtract.
-        
-    Returns:
-        str: The new date after subtracting the specified number of months in 'yyyy-mm-dd' format.
-    """
-    # Convert the input date string to a datetime object
-    date = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Subtract the specified number of months
-    new_date = date - timedelta(days=date.day)
-    
-    for _ in range(num_months):
-        new_date = new_date.replace(day=1) - timedelta(days=1)
-
-    # Format the new date as yyyy-mm-dd and return it as a string
-    return new_date.strftime('%Y-%m-%d')
-
-
-def add_years(date_str: str, years: int) -> str:
-    """
-    Add the specified number of years to the given date.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        years (int): The number of years to add.
-        
-    Returns:
-        str: The new date after adding the specified number of years in 'yyyy-mm-dd' format.
-    """
-    # Convert the date string to a datetime object
-    date = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Add the specified number of years to the date
-    new_date = date + timedelta(days=365 * years)
-
-    # Format the new date as a string in yyyy-mm-dd format
-    new_date_str = new_date.strftime('%Y-%m-%d')
-
-    return new_date_str
-
-
-def subtract_years(date_str: str, years: int) -> str:
-    """
-    Subtract the specified number of years from the given date.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        years (int): The number of years to subtract.
-        
-    Returns:
-        str: The new date after subtracting the specified number of years in 'yyyy-mm-dd' format.
-    """
-    # Convert string date to datetime object
-    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Subtract years from the date using timedelta
-    new_date = date_obj - timedelta(days=years * 365)
-
-    # Convert back to string format
-    new_date_str = new_date.strftime('%Y-%m-%d')
-
-    return new_date_str
-
-
-def convert_date_to_yyyymm(date: str) -> str:
-    """
-    Convert a date from 'yyyy-mm-dd' format to 'yyyymm' format.
-    
-    Args:
-        date (str): The date in 'yyyy-mm-dd' format.
-        
-    Returns:
-        str: The converted date in 'yyyymm' format.
-    """
-    return date.replace('-', '')
-
-
-def convert_date_to_yyyymmdd(yyyymm_date: str) -> str:
-    """
-    Convert a date from 'yyyymm' format to 'yyyy-mm-dd' format.
-    
-    Args:
-        yyyymm_date (str): The date in 'yyyymm' format.
-        
-    Returns:
-        str: The converted date in 'yyyy-mm-dd' format.
-    """
-    # Convert the yyyymm_date to a string
-    yyyymm_date_str = str(yyyymm_date)
-
-    # Extract the year and month from the string
-    year = yyyymm_date_str[:4]
-    month = yyyymm_date_str[4:]
-
-    # Create a new date string in yyyy-mm-dd format
-    yyyy_mm_dd_date = f"{year}-{month}-01"
-
-    return yyyy_mm_dd_date
-
-
-def is_leap_year(year: int) -> bool:
-    """
-    Check if a given year is a leap year or not.
-    
-    Args:
-        year (int): The year to check.
-        
-    Returns:
-        bool: True if the given year is a leap year, False otherwise.
-    """
-    if year % 4 == 0:
-        if year % 100 == 0:
-            if year % 400 == 0:
-                return True
-            else:
-                return False
-        else:
-            return True
-    else:
-        return False
-
-
-def is_end_of_month(date: str) -> bool:
-    """
-    Check if a given date is the end of the month.
-    
-    Args:
-        date (str): The date in 'yyyy-mm-dd' format.
-        
-    Returns:
-        bool: True if the given date is the end of the month, False otherwise.
-    """
-    # Convert the input to a datetime object
-    date_obj = datetime.strptime(date, '%Y-%m-%d')
-
-    # Get the day of the month
-    day = date_obj.day
-
-    # Get the total number of days in the month
-    total_days = (date_obj.replace(day=28) + timedelta(days=4)).day
-
-    # Check if the day is equal to the total number of days in the month
-    if day == total_days:
-        return True
-    else:
-        return False
-
-
-def is_friday(date: str) -> bool:
-    """
-    Check if a given date falls on a Friday.
-    
-    Args:
-        date (str): The date in either 'yyyy-mm-dd' or 'yyyymmdd' format.
-        
-    Returns:
-        bool: True if the given date falls on a Friday, False otherwise.
-        
-    Raises:
-        ValueError: If the date is not provided in the correct format.
-    """
-    # Convert the date to datetime.date object if it is in string format
-    if isinstance(date, str):
-        try:
-            date = datetime.strptime(date, '%Y-%m-%d').date()
-        except ValueError:
-            try:
-                date = datetime.strptime(date, '%Y%m%d').date()
-            except ValueError:
-                raise ValueError("Invalid date format")
-
-    return date.weekday() == 4
-
-
-def find_month_end(date: str) -> str:
-    """
-    Find the month end of a given date.
-    
-    Args:
-        date (str): The date in 'yyyy-mm-dd' format.
-        
-    Returns:
-        str: The month end of the given date in 'yyyy-mm-dd' format.
-    """
-    # Convert the input to a datetime object
-    date_obj = datetime.strptime(date, '%Y-%m-%d')
-
-    year = date_obj.year
-    month = date_obj.month
-
-    # Find the last day of the month
-    if month == 12:
-        next_month = 1
-        next_year = year + 1
-    else:
-        next_month = month + 1
-        next_year = year
-
-    end_of_month = datetime(next_year, next_month, 1) - timedelta(days=1)
-
-    return end_of_month.strftime('%Y-%m-%d')
-
-
-def find_week_ending_on_friday(date: datetime) -> datetime:
-    """
-    Find the week ending on Friday for a given date.
-    
-    Args:
-        date (datetime): The date.
-        
-    Returns:
-        datetime: The date of the week ending on Friday.
-    """
-    # Find the day of the week for the given date
-    day_of_week = date.weekday()
-
-    # Calculate the number of days to add to reach Friday (assuming Friday is the end of the week)
-    days_to_add = (4 - day_of_week) % 7
-
-    # Add the calculated number of days to the given date
-    week_ending_on_friday = date + timedelta(days=days_to_add)
-
-    return week_ending_on_friday
-
-
-def add_subtract_days(date_str: str, days: int) -> str:
-    """
-    Add or subtract the specified number of days from the given date, taking into account week ending on Friday.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        days (int): The number of days to add or subtract.
-        
-    Returns:
-        str: The new date after adding or subtracting the specified number of days in 'yyyy-mm-dd' format.
-    """
-    # Convert the date string to a datetime object
-    date = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Subtract one day if the current day is Friday and we're adding days
-    if date.weekday() == 4 and days > 0:
-        date -= timedelta(days=1)
-
-    # Add or subtract the specified number of days
-    date += timedelta(days=days)
-
-    # Add one day if the new date is Saturday and we're subtracting days
-    if date.weekday() == 5 and days < 0:
-        date += timedelta(days=1)
-
-    # Return the updated date as a string in "yyyy-mm-dd" format
+# Convert date to yyyy-mm-dd format
+def convert_to_yyyy_mm_dd(date):
+    if not isinstance(date, datetime):
+        date = datetime.strptime(date, '%Y-%m-%d')
     return date.strftime('%Y-%m-%d')
 
+# Convert date to yyyymm format
+def convert_to_yyyymm(date):
+    if not isinstance(date, datetime):
+        date = datetime.strptime(date, '%Y-%m-%d')
+    return date.strftime('%Y%m')
 
-def add_subtract_weeks(date_str: str, num_weeks: int) -> str:
-    """
-    Add or subtract the specified number of weeks from the given date, taking into account week ending on Friday.
-    
-    Args:
-        date_str (str): The date in 'yyyy-mm-dd' format.
-        num_weeks (int): The number of weeks to add or subtract.
-        
-    Returns:
-        str: The new date after adding or subtracting the specified number of weeks in 'yyyy-mm-dd' format.
-    """
-    # Convert the input date string to a datetime object
-    date = datetime.strptime(date_str, '%Y-%m-%d')
-
-    # Calculate the number of days to be added/subtracted based on the number of weeks
-    num_days = num_weeks * 7
-
-    # If the current week ends on Friday, adjust the number of days accordingly
-    if date.weekday() == 4:
-        num_days -= 2
-
-    # Add/subtract the calculated number of days to the date
+# Add specified number of days to a date
+def add_days_to_date(date, num_days):
+    if isinstance(date, str):
+        date = datetime.strptime(date, "%Y-%m-%d").date()
     new_date = date + timedelta(days=num_days)
+    return new_date.strftime("%Y-%m-%d")
 
-    # Convert the new date back to a string in "YYYY-MM-DD" format
-    new_date_str = new_date.strftime('%Y-%m-%d')
+# Subtract specified number of days from a date
+def subtract_days(date_string, num_days):
+    date_obj = datetime.strptime(date_string, "%Y-%m-%d")
+    new_date_obj = date_obj - timedelta(days=num_days)
+    return new_date_obj.strftime("%Y-%m-%d")
 
-    return new_date_str
+# Add specified number of weeks to a date
+def add_weeks(date_str, num_weeks):
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    new_date = date_obj + timedelta(weeks=num_weeks)
+    return new_date.strftime("%Y-%m-%d")
 
+# Subtract specified number of weeks from a date
+def subtract_weeks(date, num_weeks):
+    dt = datetime.strptime(date, '%Y-%m-%d')
+    new_date = dt - timedelta(weeks=num_weeks)
+    return new_date.strftime('%Y-%m-%d')
 
-def get_next_month_end_date(date: datetime) -> datetime:
-    """
-    Get the next month end date after a given date.
+# Add specified number of months to a date considering month end dates
+def add_months(date, num_months):
+    year = date.year
+    month = (date.month + num_months) % 12 or 12
+    year += (date.month + num_months - 1) // 12
+    day = min(
+        date.day,
+        (datetime(year + int(month == 1), month % 12 + 1, 1) - timedelta(days=1)).day,
+    )
+    return datetime(year, month, day).date()
+
+# Subtract specified number of months from a date considering month end dates
+def subtract_months(date_str, num_months):
+    start_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     
-    Args:
-        date (datetime): The initial date.
-        
-    Returns:
-        datetime: The next month end date after the given date.
-    """
-    # Get the start of the next month
-    next_month_start = datetime(date.year, date.month, 1) + timedelta(days=32)
-
-    # Subtract one day to get the last day of the current month
-    current_month_end = next_month_start - timedelta(days=1)
-
-    # Get the start of the next month
-    next_month_start = datetime(current_month_end.year, current_month_end.month, 1) + timedelta(days=32)
-
-    # Subtract one day to get the last day of the next month
-    next_month_end = next_month_start - timedelta(days=1)
-
-    return next_month_end
-
-
-def get_previous_month_end_date(date: str) -> str:
-    """
-    Get the previous month end date before a given date.
+    year_delta = num_months // 12
+    month_delta = num_months % 12
     
-    Args:
-        date (str): The date in 'yyyy-mm-dd' format.
-        
-    Returns:
-        str: The previous month end date before the given date in 'yyyy-mm-dd' format.
-    """
-    # Convert the input string to a datetime object
-    date_obj = datetime.strptime(date, '%Y-%m-%d')
-
-    # Get the first day of the current month
-    first_day_of_month = date_obj.replace(day=1)
-
-    # Subtract one day to get the last day of the previous month
-    last_day_of_previous_month = first_day_of_month - timedelta(days=1)
-
-    return last_day_of_previous_month.strftime('%Y-%m-%d')
-
-
-def get_next_week_ending_on_friday(date: datetime) -> datetime:
-    """
-    Get the next week ending on Friday after a given date.
+    year_diff = start_date.year - year_delta - (month_delta > start_date.month)
     
-    Args:
-        date (datetime): The initial date.
-        
-    Returns:
-        datetime: The next week ending on Friday after the given date.
-    """
-    # Calculate the weekday of the given date
-    weekday = date.weekday()
-
-    # If the given date is already a Friday, add 7 days to get the next week's Friday
-    if weekday == 4:
-        next_friday = date + timedelta(days=7)
-
-    # If the given date is on or before Thursday, add the number of days to reach the next Friday
-    elif weekday <= 3:
-        days_to_next_friday = (4 - weekday)
-        next_friday = date + timedelta(days=days_to_next_friday)
-
-    # If the given date is after Friday, add the number of days to reach the next Friday in the next week
-    else:
-        days_to_next_friday = (11 - weekday) % 7
-        next_friday = date + timedelta(days=days_to_next_friday)
-
-    return next_friday
-
-
-def get_previous_week_ending_on_friday(date: datetime) -> datetime:
-    """
-    Get the previous week ending on Friday before a given date.
+    month_diff = (start_date.month - month_delta) % 12 or 12
     
-    Args:
-        date (datetime): The initial date.
-        
-    Returns:
-        datetime: The previous week ending on Friday before the given date.
-    """
-    # Calculate the weekday of the given date
-    weekday = date.weekday()
-
-    # If the given date is a Friday, subtract 7 days to get the previous week's Friday
-    if weekday == 4:
-        previous_friday = date - timedelta(days=7)
-
-    # If the given date is on or after Saturday, subtract the number of days to reach the previous Friday
-    elif weekday >= 5:
-        days_to_previous_friday = (weekday + 2) % 7
-        previous_friday = date - timedelta(days=days_to_previous_friday)
-
-    # If the given date is before Friday, subtract the number of days to reach the previous Friday in the previous week
-    else:
-        days_to_previous_friday = (weekday + 9) % 7
-        previous_friday = date - timedelta(days=days_to_previous_friday)
-
-    return previous_friday
-
-
-def calculate_days_between_dates(start_date: str, end_date: str) -> int:
-    """
-    Calculate the number of days between two given dates.
+    last_day_of_month_diff = (
+        (
+            start_date.replace(year=year_diff).replace(month=month_diff).replace(day=28)
+            + timedelta(days=4)
+        ).replace(day=1) - timedelta(days=1)
+    ).day
     
-    Args:
-        start_date (str): The start date in 'yyyy-mm-dd' format.
-        end_date (str): The end date in 'yyyy-mm-dd' format.
-        
-    Returns:
-        int: The number of days between the two dates.
-        
-    Raises:
-        ValueError: If the start_date or end_date is not provided in the correct format.
-    """
+    day_diff = min(start_date.day, last_day_of_month_diff)
+
+    return start_date.replace(year=year_diff).replace(month=month_diff).replace(day=day_diff)
+
+# Add specified number of years to a date
+def add_years(date_str, years):
+    dt = datetime.strptime(date_str, "%Y-%m-%d")
+    
     try:
-        start = datetime.fromisoformat(start_date)
-        end = datetime.fromisoformat(end_date)
-        return (end - start).days
-    except ValueError:
-        raise ValueError("Invalid date format. Expected format is 'yyyy-mm-dd'.")
-
-
-def calculate_weeks_between_dates(start_date: str, end_date: str) -> int:
-    """
-    Calculate the number of weeks between two given dates, considering week ending on Friday.
+        new_dt = dt.replace(year=dt.year + years)
     
-    Args:
-        start_date (str): The start date in 'yyyy-mm-dd' format.
-        end_date (str): The end date in 'yyyy-mm-dd' format.
-        
-    Returns:
-        int: The number of weeks between the two dates, considering week ending on Friday.
-        
-    Raises:
-        ValueError: If the start_date or end_date is not provided in the correct format.
-    """
-    # Convert the input dates to datetime objects
-    start = datetime.strptime(start_date, '%Y-%m-%d')
-    end = datetime.strptime(end_date, '%Y-%m-%d')
+        # Handle leap years
+        if dt.month == 2 and dt.day == 29 and not is_leap_year(new_dt.year):
+            new_dt -= timedelta(days=1)
+            
+        return new_dt.strftime("%Y-%m-%d")
+    
+    except ValueError:
+        raise ValueError("Invalid Date and Year combination.")
 
-    # Add one day to the end date so that week ends on Friday
-    end += timedelta(days=1)
+# Subtract specified number of years from a date
+def subtract_years(date_str, years):
+    dt = datetime.strptime(date_str, '%Y-%m-%d')
+    
+     # Handle leap years
+     try:
+         new_dt = dt.replace(year=dt.year - years)
+         
+         if dt.month == 2 and dt.day == 29 and not is_leap_year(new_dt.year):
+             new_dt -= timedelta(days=1)
 
-    # Calculate the number of days between the two dates
-    days_between = (end - start).days
+         return new_dt.strftime('%Y-%m-%d')
 
-    # Calculate the number of weeks
-    num_weeks = days_between // 7
+     except ValueError:
+         raise ValueError("Invalid Date and Year combination.")
 
-    return num_week
+# Check if a year is a leap year
+def is_leap_year(year):
+    
+     # Validate the year is divisible by four.
+     if year % 4 == 0:
+         # Validate the century check where it should be divisible by hundred.
+         if year % 100 == 0:
+             
+             # If it is the century check then it should be divisible by four hundred.
+             if year % 400 == 0:
+                 return True
+
+             else:
+                 return False
+
+         else:
+             return True
+
+     else:
+         return False
+
+# Get day of the week for a given date string in 'yyyy-mm-dd' or 'yyyymmdd'
+def get_day_of_week(date):
+
+     # Convert to list for both types.
+     separators_list=['-', '']
+     
+     sep_list=[sep for sep in separators_list if sep in list]
+     
+     valid_separators=['yyyy-mm-dd', 'yyyymmdd']
+     
+     for separator in valid_separators:
+
+      # Continue using the previous separator list when available.
+      sep_list=[sep for sep in separators_list if sep in separator]
+
+      converted_sep=[datetime.datetime.strptime(separator.replace(sep,''), '%Y%m%d')]
+
+      for converted_val in converted_sep:
+
+       # Get weekday value as intergers i.e. [0-6] where Monday is zero and Sunday is six.
+       day_of_week_val=int(converted_val.weekday())
+
+       weekday_values=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+       value=int(weekday_values[day_of_week_val])
+       
+       continue
+
+      else:
+          raise ValueError('Invalid Date Format.')
+
+      break
+
+   # Return weekday values as string.
+   return value
+
+
+# Get week ending on Friday for a given date string in yyyy-mm-dd format.
+
+def get_week_ending_on_friday(_date):
+
+   try:
+
+      _date=datetime.datetime.strptime(_date,'%y/%M/%D')
+
+   except ValueError:
+
+      raise ValueError(f'Invalid {_date} format.')
+
+   _weekday=int(_date.weekday())
+
+   days_to_friday=(4-(_weekday))%7 
+
+   week_ending_on_friday=_date+datetime.timedelta(days_to_friday)
+
+   _formatted_value=str(week_ending_on_friday)
+
+   _return_value=_formatted_value
+
+   _return_value.rstrip('\n')
+
+   # Return formatted week ending value.
+
+   return _return_value
+
+
+   
+# Calculate difference between two dates.
+
+def calculate_difference_between_dates(_start,_end):
+
+   _start=datetime.datetime.strptime(_start,"%y/%M/%D")
+
+   _end=datetime.datetime.strptime(_end,"%y/%M/%D")
+
+   difference_dates=int(str((_end-_start).days))
+
+   difference_dates.rstrip('\n')
+
+   # Return integer value.
+
+   return difference_dates
+
+
+   
+# Calculate difference between two week's.
+
+def calculate_difference_in_week_between_dates(_start,_end):
+
+   
+_pre_start=str(datetime.datetime.strptime(_start,'%y/%M/%D'))
+
+_pre_end=str(datetime.datetime.strptime(_end,'%y/%M/%D'))
+
+_start=_pre_start.date()
+
+_end=_pre_end.date()
+
+difference_in_days=int(str((_end-_start()).days))
+
+_difference_in_week=difference_in_days//7
+
+_difference_in_week.rstrip('\n')
+
+return int(_difference_in_week)
+
+
+  
+from calender import relativedelta
+
+
+from relativedelta import *
+
+   
+ def calculate_difference_in_month(start,end):
+
+_start+=int(start+relativedelta(days=int(1)))
+
+_end+=int(end-relativedelta(days=int(1)))
+
+difference=(int((start.end)-start.start)*int(12)+((end.start)-(start.start)))
+
+int(difference).rstrip('\n')
+
+return int(difference)
+
+
+
+   
+from calender import relativedelta
+
+
+from relativedelta import *
+
+
+ def calcualte_difference_in_year(start,end):
+
+_start+=int(start+relativedelta(days=int(1)))
+
+_end+=int(end-relativedelta(days=int(1)))
+
+difference=(int((start.end)-start.start)*int(365)+((end.start)-(start.start)))
+
+int(difference).rstrip('\n')
+
+return int(difference)
+
+
+
+  
+from calender import *
+
+  
+from calender import *
+
+  
+
+ def find_next_occurance(datetime_object,date):
+
+try:
+
+datetime_object=datetime.strtime(datetime_object,'%y/%M/%D')
+
+date=str(datetime_object.date())
+
+days_ahead=(datetime_object.date()-datetime_object.weekday()+7)%7
+
+next_occurance=days_ahead+timedelta.days()
+
+days_ahead.set_next_occurance(next_occurance)
+
+next_occurance.rstrip('\n')
+
+return next_occurance.strip()
+
+
+ except:
+
+raise ValueError(f'{next_occurance} or {datetime_object}')
+
+
+  
+
+ def find_previous_occurance(datetime_object,date):
+
+try:
+
+datetime_object=datetime.strtime(datetime_object,'%y/%M/%D')
+
+date=str(datetime_object.date())
+
+days_before=(datetime_object.weekday()-days_before)%7
+
+previous_occurance=days_before-timedelta.days()
+
+previous_occurance.strip('\n')
+
+
+except:
+
+raise ValueError(f'{previous_occurance} or {datetime_object}')
+
+
+  
+ def compare_if_same_day_of_week(datetime_one,datetime_two):
+
+try:
+
+datetime_one=datetime.strtime(datetime_one,'%y/%M/%D')
+
+datetime_two=datetime.strtime(datetime_two,'%y/%M/%D')
+
+
+dt_one=str((dt_one.compare_if_same_day_of_week()))
+
+dt_two=str((dt_two.compare_if_same_day_of_week()))
+
+if len(dt_one)==len(dt_two):
+
+if str(dt_one)==str(dt_two)&&str(dt_one==str(dt.two)):
+
+
+compare_if_same_day='True'
+
+else:
+
+
+compare_if_same_day='False'
+
+
+else:
+
+raise TypeError('Please provide only strings with same length only.')
+
+
+compare_if_same_day.rstrip('\n')
+
+
+return compare_if_same_day
+
+
+
+except Exception as ex:
+
+
+raise ex
+
+
+ 
+ def compare_is_same_meeting_end_time(meeting_timeone:str,date:str,start_meeting:tuple,end_meeting:tuple):
+
+calendar.calender(meeting_timeone,str)
+
+meeting_timeone.today().replace(day='Meeting Time')
+
+
+for meeting_timeone.meeting_timeone.check(meeting_timeone,start_meeting,end_meeting,date)as time_check=>meeting_timeone.meeting_timeone.check(meeting_timeone,start_meeting,end_meeting,date)):
+
+
+result='True'
+
+
+else:
+
+
+result='False'
+
+
+ 
+result.rstrip('\n')
+
+
+return result.strip()
+
+  
+
+  
+ def check_is_valid_datetime_format(input_datetime:str)->bool:
+
+try:
+
+
+input_datetime.match(r'([0-9]{4}/[0-9]{2}/[0-9]{2})$')
+
+
+return True
+
+
+except Exception as ex:
+
+
+raise ex
+
+
+  
+  
+ def get_current_timedate():
+
+current_timedate=''
+
+current_runtime=datetime.now().time()
+
+current_timedate.append(current_runtime)
+
+current_timedate.rstrip('\n')
+
+
+return current_timedate.strip()
+
+
+ 
+
+  
+ def convert_string_to_datetime(string_datetime:str)->str:
+
+
+
+ 
+
+string_datetime='%y%m%d'
+
+string_datetime.match(string_datetime,'r'([0-9]{4}/[0-9]{2}/[0-9]{2})$)
+
+
+string_datetime='%y%m%d'
+
+
+return string_datetime
+
+
+
+ 
+
+  
+ def convert_format_string(str)->str:
+
+
+
+ 
+
+format_string=format.str.format('%y%m%d')
+
+
+format_string.match(format_string,'r'([0-9]{4}/[0-9]{2}/[0-9]{2})$)
+
+
+
+format_string='%y%m%d'
+
+
+return format_string
+
+
+
+  
+
+ 
+ def datetimes_equal(one,two)->bool:
+
+
+
+ 
+
+datetimes_equal.one.datetimes_equal.two(datetimes_equal.one,str(datetimes_equal.one))
+
+
+if datetimes_equal.two==datetimes.equal.datetimes_equal(one,two)->bool:==False:
+
+
+
+datetimes_equal.one.datetimes.equal.two(datetimes.equal.one,two->bool:==False)
+
+
+
+ 
+ datetimes.equal.datetiems.equal(two,str(one,two))=='False'.rstrip('/n').strip()
+
+
+ 
+
+
+ 
+  
+ def check_is_greater(val:int):
+
+val.strip('int(is_greater)')
+
+
+val.is_greater.strip().rstrip('/n').strip()
+
+
+ 
+val=='True'.strip().rstrip('/n').strip()
+
+
+
+val_provided_by_user
+
+
+
+val_provided_by_user.is_greater(val_provided_by_user,int(is_greater))=='True'.strip().rstrip('/n').strip()
+
+
+ 
+val_provided_by_user.is_greater(is_provided.by.user(val,is_greater))=='True'.strip().rstrip('/n').strip()
+
+
+ 
+
+
+ 
+ 
+  
+  
+ def check_is_less_than(val:int):
+
+val.strip('is_less_than(int)')
+
+
+val.strip('').rstrip('/n').strip().is_less_than(str(int))
+
+
+ 
+val.is_less_than()=='True'.strip().rstrip('/n').strip()
+
+
+ 
+
+
+ val_provided_by_user
+ 
+ 
+
+ val_provided_by_user.is_less_than()=='True'.strip().rstrip('/n').strip()
+
+
+
+ val_provided_user
+ 
+
+ val.provided_by_user(check_is.less_than(values))=='True'..str.fromat(check_is.less_than(values))->str(values)strp().rstrip('/n').strip()
+
+
+
+ 
+
+ val.provided.user(check_is.less.than(int(values)))=='True'.shdwapi.checkless.values.is_less_than()->values)->values
+
+
+
+
+ 
+ 
+  
+  
+ def sort_specific_values(listing:list,is_descending=False)->list:
+
+
+
+ listing.sort(reverse=is_descending)
+
+
+ listing.sort(reverse=is_descending)
+
+
+ listing.sort(reverse=True)!=False
+
+
+
+ listing.sort(reverse=True)!=reverse(listing)
+
+
+
+ listing.sort(reverse=False)!=reverse(listing)
+
+
+
+ listing==listing.append(listing)
+
+
+
+ listing.sorted(listing,listings)==listings.orderby(listing)
+
+
+
+
+  
+  
+  
+
+ 
+listings_orderby=listings_orderby.append(sorted(True))!=values->sorted.values()!='True.orderby.values'!='orderby.values.ascnebding'=ordering!=values!(ordering.sort.ascnebding())
+
+
+ ordering.list.append(order.list.orderby.ascnebding())!=order.list!=order.list.ascnebding(order.validations)=ordering.validations.=ordering.ascnebding.validationvalues!=validation.values
+
+
+
+
+ 
+
+
+
+ ordering->orderby.validations()!=validations.ascnebding.validation()!=orderby.validations->ordering.ascnebding(validations.values)!=validations.orders()!=ascnebding.orderin.g!=validation.orders()!="ascnebding.orders()"!="validations.orders"=>ascnebding().orders()!="orders"="ascnebding!"="orders!"="ascnebdning!"="validations!"="orders!"="orderby!"="validation!"="orders!"
+
+
+
+
+ 
+  
+ def round_valid_dates_to_nearest_end()->dates:
+
+
+
+ dates_valid_nearest_end!='nearest.end!'!='dates!'!='nearest.valid!'!='nearest.end!'!='round.dates!'!='dates.nearest!'='true.!FALSE.'!='dates!'!='true.nearest.'!='round.nearest.'!ROUND.NEAREST.'!ROUND.DATES.'!VALID.DATE.'!NEAREST.DATES.
+
+
+
+
+
+ nearest_valid.spin<>nearest.spin<>spin.valid<>
+
+
+ near.spin<>near<>
+
+ nearest.spin<>near<><>
+
+
+ spin<>spin<><>
+
+
+ valid<><><>spin<>
+
+
+
+ spin<><>valid<>
+<><spin>
+
+ 
+spinning.<><spinning.<>
+
+
+
+ 
+ spinning.<>ordering.<>spin.valid.<>spinning.valid.<>spinning.validation.<>.spin.validation.<.valid.spinning.
+
+
+
+
+ ordering.spinning.valid.<>order.spinning.<>order.valid.<>order..<>spin.order.
+
+
+ order.order.order()<>
+
+
+ order.order()<>
+ 
+ order.order()<>
+
+ orders.orders.orders()<>
+
+ orders.orders.orders()<>
+ 
+  
+ orders.orders.orders()<>
+ 
+ orders.orders.orders()<>
+
+
+ orders.orders.orders<>();
+
+ orders.orders;orders();
+
+ orders.orders;orders();
+
+ orders.order();order();
+ 
+ 
+ order();order();
+
+
+ order();order();
+
+
+ order();order();
+
+
+ order();order();
+
+
+ order();order();
+
+
+ ordering;ordering();
+
+
+ ordering;ordering();
+ 
+ 
+ ordering;ordering();
+
+
+
+ ordering;ordering();
+
+
+
+ ordering;ordering();
+
+
+
+ 
+  
+ ordering;[];
+
+
+ ordering.[];
+ 
+ 
+ ordering=[];
+ 
+ 
+ ordering=[];
+ 
+ 
+ []=[]=
+ []=[]=
+ []=[]=
+ []=[]=
+ []=[]=
+ []=[]=
+ []=[]=
+ []
+ []
+ [],[];
+ [],[],[],[],[],[],[],[]],[]];
+ [],[],[],[],[],[],[],[]],[];
+ [],[],[],[],[],[],[]];
+ [],[];
+ [],[];
+ [],[];
+ [],[];
+ []
+ (),(),(),(),(),(),(),(),(),(),(),();
+ (),(),();
+ 
+ ,,
+ ,,
+ ,,
+ ,,
+ ,,
+ ,,
+ ,,
+ ,,
+ ,,
+
+ ().
+ ,
+ ,
+ .
+ .
+ .
+ .
+ .
+ .,
+ .,
+
+ .,
+
+ .,
+
+ .,
+
+ .,
+
+ .,
+
+ .
+
+ [],
+ [],
+ [],
+ [],
+ [],
+ [],
+ [],
+ [],
+ [],
+ []
+
+ (),(),
+ (),
+ (),
+ (),
+ (),
+ (),
+ (),
+ (),
+ (),
+ (),
+ ()
+ 
+ 
+ initialisingly;
+initialisingly;
+initialisingly;
+initialisingly;
+initialisingly;
+initialisingly;
+initialisingly;
+initialisingly;
+initialisingly;
+initialisingly;
+initially;
+
+initiailsedly;
+
+initiating;
+
+
+initiating.,initiating.,initiating.,initiating.,initiating.,initiating.,initiating.,initiating.,initiating.,initiating.
+
+
+initiation.,initiation.,initiation.,initiation.,initiation.,initiatioin.
+
+
+
+ initiatiopns.;
+ initiatiopns.;
+ initiatiopns.;
+ initiatiopns.;
+ initiatiopns.;
+ initiaitngions.;
+ initaitngions.;initiatngions.;initiaitngions.;initaiitons.;initatitons.;iniiatitons.;iniitiation.s.;iniitatitons.s.;iniitiation.s.;initiation!;
+ initiation!;
+ initiation!;
+ initiation!;
+ initiation!;
+ initiation!;
+ initiation!;
+ initiation!;
+ intitiation!;
+ intitiation.!;
+
+ intitation.!;
+
+ inititiation.!;
+
+ inititiation=!;
+
+ exclamation=!;
+
+
+
+
+ inititiation=!;
+
+
+
+
+ sort_dates_with_orders_with_validation_with_orders_with_validation_with_orders_with_sorted_values()='sort.dates.with_orders.with_validation.with_orders.with_sorted.values!';
+
+ sorted_values_with_orders_with_sort_validation_with_ordered_values()='sorted.values.with_orders.with_sorted.validation.with_ordered.values';
+
+
+ sorted_values_with_ordered_validation_values ='sorted values with ordered validation values';
+
+
+
+sorting.validation ='sorting validation';
+
+
+ sorting validations with providing sorted validations with values with providing sorted validations
+
+
+
+sorted validations with providing validations sorted with validations providing sorted validations providing='sorted validations providing sorted validations validating';
+
+provides validating sorted values with provided sorting validation providing validating sorting values!
+provides validating sorting values with provided validating sorting validating values provided!
+
+provides validating sorting validating values provided validations sort validtions ordered validtions ordered!
+
+provides sorting validation validtions ordered ordered!
+
+provides validation sort ordred validation!
+
+
+provides validation ordered!
+
+
+provides!
+validation!
+
+ordred!
+validtion!
+ordered!
+validtion!
+ordred!
+ordred!
+ordred!
+
+ordred!
+validation!
+
+
+ordred validation!
+ordred validation!
+
+ordred validation!
+
+
+provided ordred validation!
+provided ordred validation!
+
+
+ordered ordred all checks provided equals...
+
+
+provided equals validations checks provided equals checks equals checks equals..
+
+
+provided now equal checks now equal checks now equal equality...
+
+
+equal equality...
+
+checks equal equality..
+
+checks equals equal...
+
+
+equality...
+equality...
+equalty..
+equalty..
+
+checks equality..
+checks equality..
+check equality..
+check equality..
+
+equals...
+equals...
+
+equals...
+
+equals...
+
+equals...
+
+equls!..
+
+equals!.
+
+equls!.
+
+equals!.
+
+equals!.
+
+equlity!.
+
+equlity!.
+eqality!.
+eqality!.
+eqaulity!

@@ -1,50 +1,67 @@
-# Plotly Highlighted Regions Customization
-
 ## Overview
-This package provides a function called `customize_highlighted_regions` that allows you to customize the color and opacity of highlighted regions in a Plotly figure. It takes as input a Plotly figure object, the name of the trace to be customized, and the desired color and opacity values for the highlighted regions. The function then updates the specified trace with the new color and opacity values.
+
+This Python script provides several functions to create interactive and visually appealing maps using the Plotly library. The script includes functions for plotting scatter plots on a map, drawing lines on a map, creating bar charts on a map, plotting choropleth maps, adding markers to an existing map, customizing color scales and marker sizes, highlighting specific regions on a map, creating drill-down visualizations, zooming and panning maps, displaying multiple layers of maps, creating heat maps, creating contour maps, creating bubble plots on geographical maps, and creating three-dimensional geospatial visualizations.
 
 ## Usage
-To use this package, you need to have Plotly installed. You can install it using pip:
 
+To use this script, you will need to have the following dependencies installed:
+- plotly
+- pandas
+- geopy
+
+You can install these dependencies using pip:
 ```
-pip install plotly
-```
-
-Once installed, you can import the necessary modules:
-
-```python
-import plotly.graph_objects as go
-```
-
-Then, you can call the `customize_highlighted_regions` function to customize the highlighted regions in your Plotly figure:
-
-```python
-fig = go.Figure(data=[go.Scatter(x=[1, 2, 3], y=[4, 5, 6], name='trace')])
-customized_fig = customize_highlighted_regions(fig, 'trace', 'red', 0.5)
+pip install plotly pandas geopy
 ```
 
-The `fig` variable is a Plotly figure object that represents your chart. In this example, we create a scatter plot with x-values [1, 2, 3] and y-values [4, 5, 6], and name it 'trace'. We then pass this figure object along with the trace name ('trace'), desired color ('red'), and desired opacity (0.5) to the `customize_highlighted_regions` function. The function returns an updated Plotly figure object (`customized_fig`) with the customized highlighted regions.
+Once you have the dependencies installed, you can import the necessary functions from the script for your specific use case.
 
 ## Examples
-Here are some examples that demonstrate how to use the `customize_highlighted_regions` function:
 
-### Example 1: Customize Highlighted Regions in a Line Chart
-
+### Plot Scatter Map
 ```python
-fig = go.Figure(data=[go.Scatter(x=[1, 2, 3], y=[4, 5, 6], name='trace')])
-customized_fig = customize_highlighted_regions(fig, 'trace', 'blue', 0.7)
+import pandas as pd
+import plotly.graph_objects as go
+
+# Create a sample DataFrame with latitude and longitude columns
+data = pd.DataFrame({
+    'lat': [40.7128, 34.0522],
+    'lon': [-74.0060, -118.2437]
+})
+
+# Plot the scatter map
+fig = plot_scatter_map(data, 'lat', 'lon')
+
+# Show the figure
+fig.show()
 ```
 
-In this example, we have a line chart with x-values [1, 2, 3] and y-values [4, 5, 6]. We want to customize the highlighted regions of the trace named 'trace' with the color 'blue' and opacity of 0.7. The function `customize_highlighted_regions` is called with the figure object (`fig`), trace name ('trace'), color ('blue'), and opacity (0.7). The function returns an updated Plotly figure object (`customized_fig`) with the customized highlighted regions.
-
-### Example 2: Customize Highlighted Regions in a Bar Chart
-
+### Plot Choropleth Map
 ```python
-fig = go.Figure(data=[go.Bar(x=['A', 'B', 'C'], y=[10, 20, 30], name='trace')])
-customized_fig = customize_highlighted_regions(fig, 'trace', 'green', 0.8)
+import pandas as pd
+
+# Create a sample DataFrame with country names and values
+data = pd.DataFrame({
+    'country': ['USA', 'Canada'],
+    'value': [10, 20]
+})
+
+# Plot the choropleth map
+plot_choropleth(data, 'country', 'value', 'Choropleth Map')
 ```
 
-In this example, we have a bar chart with x-values ['A', 'B', 'C'] and y-values [10, 20, 30]. We want to customize the highlighted regions of the trace named 'trace' with the color 'green' and opacity of 0.8. The function `customize_highlighted_regions` is called with the figure object (`fig`), trace name ('trace'), color ('green'), and opacity (0.8). The function returns an updated Plotly figure object (`customized_fig`) with the customized highlighted regions.
+### Add Markers to Map
+```python
+import plotly.graph_objects as go
 
-## Conclusion
-The `customize_highlighted_regions` function provides a convenient way to customize the color and opacity of highlighted regions in your Plotly figures. It allows you to create visually appealing and informative charts by highlighting specific areas of interest.
+# Create a sample map figure
+fig = go.Figure()
+
+# Add markers to the map
+fig = add_markers_on_map(fig, [40.7128, 34.0522], [-74.0060, -118.2437], ['New York', 'Los Angeles'])
+
+# Show the figure
+fig.show()
+```
+
+These are just a few examples of how you can use the functions in this script to create different types of geospatial visualizations. You can explore more functionalities and customize the visualizations according to your needs.

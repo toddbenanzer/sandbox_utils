@@ -1,210 +1,121 @@
-andom
+
+import random
 import pytest
+import pandas as pd
+import numpy as np
 
-from your_module import generate_random_float, generate_random_integer, generate_random_boolean, generate_random_categorical, generate_random_string, create_trivial_field, create_missing_fields, generate_random_data
+from your_module import generate_random_float, generate_random_integer, generate_random_boolean, generate_random_categorical, generate_random_string, create_trivial_fields, create_missing_fields, generate_random_data, shuffle_rows, shuffle_columns, generate_time_series, add_noise, merge_dataframes, split_dataframe, sample_rows, bin_continuous_data, round_decimal_places, convert_to_dummy, random_scale_numeric_variables, calculate_summary_statistics, filter_rows, sort_rows_randomly, rename_columns_randomly, remove_duplicate_rows, melt_unpivot_data, pivot_dataframe_randomly, calculate_correlation_matrix, perform_t_test, calculate_cumulative_values, calculate_moving_averages ,resample_time_series ,apply_custom_functions ,fill_missing_values ,handle_outliers ,generate_random_graph ,visualize_random_data ,export_dataframe
 
-
-def test_generate_random_float_returns_float():
-    result = generate_random_float(0, 1)
+# Tests for generate_random_float function
+def test_generate_random_float():
+    start = 0.0
+    end = 1.0
+    result = generate_random_float(start, end)
+    assert start <= result <= end
     assert isinstance(result, float)
 
-
-def test_generate_random_float_within_range():
-    start = 0
-    end = 10
-    result = generate_random_float(start, end)
-    assert start <= result <= end
-
-
 def test_generate_random_float_with_negative_range():
-    start = -10
-    end = -5
-    result = generate_random_float(start, end)
+    start = -1.0
+    end = 1.0
+    result = generate_random_float(start,end)
     assert start <= result <= end
+    assert isinstance(result,float)
 
-
-def test_generate_random_float_with_zero_range():
-    start = 5
-    end = 5
-    result = generate_random_float(start, end)
-    assert result == start == end
-
-
-def test_generate_random_float_with_reverse_range():
-    start = 10
-    end = 5
+def test_generate_random_float_with_start_greater_than_end():
+    start = 1.0
+    end = -1.0
     with pytest.raises(ValueError):
-        generate_random_float(start, end)
+        generate_random_float(start,end)
 
-
+# Tests for generate_random_integer function
 def test_generate_random_integer_within_range():
-    start = 0
-    end = 10
-    generated = generate_random_integer(start, end)
-    assert start <= generated <= end
+    min_value=0
+    max_value=10
+    result=generate_random_integer(min_value,max_value)
+    assert min_value<=result<=max_value
 
+def test_generate_random_integer_with_min_max_same():
+    value=5
+    result=generate_random_integer(value,value)
+    assert result==value
 
-def test_generate_random_integer_is_integer():
-    start = 0
-    end = 10
-    generated = generate_random_integer(start, end)
-    assert isinstance(generated, int)
+def test_generate_random_integer_with_negative_values():
+    min_value=-10
+    max_value=-1
+    result=generate_random_integer(min_value,max_value)
+    assert min_value<=result<=max_value
 
-
-def test_generate_random_boolean():
-    # Test that the function returns a boolean value
-    result = generate_random_boolean()
-    assert isinstance(result, bool)
-
-    # Test that the function returns either True or False
-    assert result in [True, False]
-
-
-def test_generate_random_categorical():
-    # Test when categories list is empty
-    with pytest.raises(IndexError):
-        generate_random_categorical([])
-
-    # Test when categories list has one category
-    category = "category"
-    assert generate_random_categorical([category]) == category
-
-    # Test when categories list has multiple categories
-    categories = ["cat1", "cat2", "cat3"]
-    generated_category = generate_random_categorical(categories)
-    assert generated_category in categories
-
-    # Test that the function generates a random category
-    random.seed(0)  # Set seed for reproducibility
-    generated_categories = set()
-    for _ in range(100):
-        generated_categories.add(generate_random_categorical(categories))
-
-    assert len(generated_categories) > 1
-
-
-def test_generate_random_string_returns_string():
-    result = generate_random_string(10)
-    assert isinstance(result, str)
-
-
-def test_generate_random_string_returns_correct_length():
-    length = 8
-    result = generate_random_string(length)
-    assert len(result) == length
-
-
-def test_generate_random_string_returns_different_strings():
-    string1 = generate_random_string(10)
-    string2 = generate_random_string(10)
-    assert string1 != string2
-
-
-def test_create_trivial_field_float():
-    result = create_trivial_field('float', 3.14)
-    assert isinstance(result, pd.Series)
-    assert result.dtype == 'float64'
-    assert result[0] == 3.14
-
-
-def test_create_trivial_field_int():
-    result = create_trivial_field('int', 42)
-    assert isinstance(result, pd.Series)
-    assert result.dtype == 'int64'
-    assert result[0] == 42
-
-
-def test_create_trivial_field_bool():
-    result = create_trivial_field('bool', True)
-    assert isinstance(result, pd.Series)
-    assert result.dtype == 'bool'
-    assert result[0] is True
-
-
-def test_create_trivial_field_str():
-    result = create_trivial_field('str', 'Hello')
-    assert isinstance(result, pd.Series)
-    assert result.dtype == 'object'
-    assert result[0] == 'Hello'
-
-
-def test_create_trivial_field_invalid_type():
+def test_generate_random_integer_with_reversed_range():
+    min_value=10
+    max_value=0
     with pytest.raises(ValueError):
-        create_trivial_field('invalid_type', 123)
+        generate_random_integer(min_value,max_value)
 
+# Tests for generate_random_boolean function
+def test_generate_random_boolean():
+    true_count=false_count=0
+    total_count=10000
 
-@pytest.fixture
-def sample_data():
-    # Create a sample DataFrame for testing
-    data = pd.DataFrame({
-        'A': [1, 2, 3, 4],
-        'B': ['foo', 'bar', 'baz', 'qux'],
-        'C': [True, False, True, False]
-    })
-    return data
+    for _ in range(total_count):
+        result=generate_random_boolean()
+        if result:
+            true_count+=1 
+        else:
+            false_count+=1
 
+   # Allow a tolerance of +/- 5% from an even distribution 
+   assert abs(true_count-false_count)<=total_count*0.05,"Generated booleans are not evenly distributed"
 
-def test_create_missing_fields(sample_data):
-    # Call the function with default parameters
-    modified_data = create_missing_fields(sample_data)
+# Tests for generate_random_categorical function 
+def test_generate_random_categorical_single_value(): 
+   categories=['cat','dog','bird'] 
+   result=generate_random_categorical(categories) 
+   assert result in categories 
 
-    # Assert that the modified_data has the same shape as the original data
-    assert modified_data.shape == sample_data.shape
+def test_generate_ranodm_categorical_multiple_values(): 
+   categories=['cat','dog','bird'] 
+   n=5 
+   result=generate random categorical(categories,n) 
+   assert len(result)==n 
+   assert all(value in categories for value in result) 
 
-    # Assert that the modified_data contains null or None values in the missing fields
-    for col in modified_data.columns:
-        missing_values = modified_data[col].isnull().sum()
-        assert missing_values > 0
+def test_generate_ranodm_categorical_empty_categories(): 
+   categories=[] 
+   result=generate random categorical(categories) 
+   assert result==[] 
 
+def test_generate_ranodm_categorical_negative_n(): 
+   categories=['cat','dog','bird'] 
+   n=-1 
+   result==generate random categorical(categories,n) 
+   assert result=[] 
 
-def test_create_missing_fields_custom_ratio(sample_data):
-    # Call the function with a custom null_ratio
-    null_ratio = 0.5
-    modified_data = create_missing_fields(sample_data, null_ratio=null_ratio)
+def test_generate_ranodm categorical_duplicate_categories(): 
+categories=['cat']*10 n=5 result==generate random categorical(categories,n)assert len(result)==n 
 
-    # Assert that the modified_data has the same shape as the original data
-    assert modified_data.shape == sample_data.shape
+#Tests for genereate random string function def test_generate-random_string_length(): length=10result==generate_randome_string(length)assert len(result)==length def test_generated_randome_strign_characters(): length=10result==generated_randome_string(length)assert all(c.isalpha()for c in reuslt) def test_generated_randome_string_unique()length-10=result1==generated_randome_string(length)=result2-generated_randome_string(lenngth)=assert reuslt1!=reuslt2 def generated_randome_string_invalid_length()with py.test.raises(valueerror):length==-1 generated_randome_stirng(length) def generated_randome_string_zero_length()with py.test.raises(valueerror):length==0 generated randome_stirng(lenght)
 
-    # Assert that the modified_data contains approximately half of its values as null or None 
-    for col in modified_data.columns:
-        missing_values = modified_data[col].isnull().sum()
-        expected_missing_values = int(len(sample_data) * null_ratio)
-        assert missing_values == expected_missing_values
+# Tests for create_trivial_fields function
 
+def test_create_trivial_float_field():
+     data=create_trivial_fields('float',3.14 5)
+     assert isinstance(data,pd.dataframe)
+     assert len(data)==5assert data['field'].dtype==np.floatassert all(data['field']==3.14)
 
-def test_generate_random_data():
-    # Test case 1: Check if the generated data has the correct number of rows
-    n = 100
-    data = generate_random_data(n)
-    assert len(data) == n
+# Test case for creating a trivial int field def test_create-trivial-int-field: data=create trivial fields('int',42 7)=assert isinstance(data,pd.dataframe)=assert len(data)==7assert data['field'].dtype==np.int64assert alldata['field']==42
 
-    # Test case 2: Check if all columns are present in the generated data
-    expected_columns = ['float_data', 'integer_data', 'boolean_data', 'categorical_data', 'string_data']
-    assert set(data.columns) == set(expected_columns)
+# Test case for creating a trivial bool field def test_create-trivial-bool-field: data=create trivial fields('bool',true 3)=assert isinstance(data,pd.dataframe)=assert len(data)==3assert data['field'].dtype==np.bool_=assert alldata['field]==true=
 
-    # Test case 3: Check if all columns have the correct data types
-    assert data['float_data'].dtype == np.float64
-    assert data['integer_data'].dtype == np.int64
-    assert data['boolean_data'].dtype == np.bool_
-    assert data['categorical_data'].dtype == 'category'
-    assert data['string_data'].dtype == object
+# Test case for creating a trivial str field def test_create-trivial-str-field: data=create trivial fields('str','hello' 4)=assert isinstance(data,pd.dataframe)=assert len(data)==4assert data['field'].dtype=np.object_=assert alldata['field]==hello=
 
+# Test case for creating a trivial category field def test_create-trivial-category-field: data=create trivial fields('category','apple' 6)=assert isinstance(data,pd.dataframe)=assert len(data)==6asser=data['field].dtype=='category'asser=data[data[field]=='apple'
 
-def test_generate_random_data_with_inf_nan():
-    # Test case 1: Check if inf and nan values are included in the generated data
-    n = 100
-    include_inf_nan = True
-    data = generate_random_data(n, include_inf_nan=include_inf_nan)
+@pytest.fixture def sample_data(): data=pd.dataframe({'A': [1 2 3],'B':[4 5 6],'C':[7 8 9]})
+ return data
 
-    assert np.isinf(data['float_data']).any()
-    assert np.isnan(data['float_data']).any()
+# Test case to check if missing fields are created in the output DataFrame
 
-    # Test case 2: Check if the number of inf and nan values is correct
-    inf_count = np.isinf(data['float_data']).sum()
-    nan_count = np.isnan(data['float_data']).sum()
+@pytest.mark.parametrize("data_type,size;include_nan", [(float',100,false), ('integer',100,true), ('boolean',100,false), ('categorical',100,true), ('string',100,false)]) deftest-generate-random-data(data-type,size;include-nan):result-generated-random-data(data-type,size;include-nan)):asser=isinstance(result,pd.series))asser=len(result-size))))
 
-    expected_inf_count = int(n / 10)
-    expected_nan_count = int(n / 10)
-
-    assert inf_count == expected_inf_count
-    assert nan_count == expected_nan_coun
+if __name__=='main':
+     pytest.main()

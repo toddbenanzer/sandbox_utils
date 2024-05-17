@@ -1,184 +1,241 @@
-umpy as np
+
+import numpy as np
 import pytest
-from scipy.stats import norm, expon, gamma
 
-def check_zero_variance(data):
-    return np.var(data) == 0
+# Test functions for check_zero_variance
+def test_check_zero_variance():
+    # Test case 1: Input data has zero variance
+    data = np.array([1, 1, 1, 1])
+    assert check_zero_variance(data) is True
 
-def check_constant_values(data):
-    return np.unique(data).size == 1
+    # Test case 2: Input data has non-zero variance
+    data = np.array([1, 2, 3, 4])
+    assert check_zero_variance(data) is False
 
-def handle_missing_values(data):
-    return data
+    # Test case 3: Input data contains missing values with non-zero variance
+    data = np.array([1, np.nan, 3, 4])
+    assert check_zero_variance(data) is False
 
-def handle_zeroes(data):
-    epsilon = np.finfo(float).eps
-    data[data == 0] = epsilon
-    return data
+    # Test case 4: Input data contains missing values with zero variance
+    data = np.array([1, np.nan, 1, np.nan])
+    assert check_zero_variance(data) is True
 
-def calculate_statistics(data):
-    statistics = {
-        'mean': np.mean(data),
-        'median': np.median(data),
-        'mode': stats.mode(data).mode[0],
-        'standard_deviation': np.std(data),
-        'variance': np.var(data)
-    }
-    return statistics
+    # Test case 5: Input data is empty
+    data = np.array([])
+    assert check_zero_variance(data) is False
 
-def fit_distribution(data):
-    if check_constant_values(data):
-        return "Constant Distribution"
-    if check_zero_variance(data):
-        return "Zero Distribution"
-    
-    result = {}
-    
-    if len(np.unique(data)) <= 2:
-        result["constant"] = {
-            "params": (),
-            "pdf": None,
-            "cdf": None
-        }
-    
-    try:
-        params = norm.fit(data)
-        result["normal"] = {
-            "params": params,
-            "pdf": norm.pdf,
-            "cdf": norm.cdf
-        }
-    except:
-        pass
-    
-    try:
-        params = gamma.fit(data)
-        result["gamma"] = {
-            "params": params,
-            "pdf": gamma.pdf,
-            "cdf": gamma.cdf
-        }
-    except:
-        pass
-    
-    try:
-        params = expon.fit(data)
-        result["exponential"] = {
-            "params": params,
-            "pdf": expon.pdf,
-            "cdf": expon.cdf
-        }
-    except:
-        pass
-    
-    return result
+    # Test case 6: Input data is a single value (zero variance)
+    data = np.array([10])
+    assert check_zero_variance(data) is True
 
-def select_best_distribution(data):
-    distributions = fit_distribution(data)
-    
-    if "constant" in distributions:
-        return "Constant Distribution"
-    if "normal" in distributions:
-        return "Normal Distribution"
-    if "gamma" in distributions:
-        return "Gamma Distribution"
-    
-    return "Other Distribution"
+# Test functions for check_constant_values
+def test_check_constant_values():
+    # Test when the data contains a single constant value
+    data = np.array([1, 1, 1, 1])
+    assert check_constant_values(data) is True
 
-def generate_random_samples(data):
-    if check_zero_variance(data):
-        raise ValueError("Data has zero variance")
-    if check_constant_values(data):
-        raise ValueError("Data has constant values")
-    if np.isnan(data).any():
-        raise ValueError("Data contains missing values")
-    
-    samples = np.random.choice(data, size=len(data))
-    return samples
+    # Test when the data contains multiple values
+    data = np.array([1, 2, 3, 4])
+    assert check_constant_values(data) is False
 
-@pytest.fixture
-def random_data():
-    return np.random.randn(1000)
+    # Test when the data is empty
+    data = np.array([])
+    assert check_constant_values(data) is False
 
-def plot_histogram(data):
-    plt.hist(data, bins='auto')
-    plt.show()
+# Test functions for handle_missing_values
+def test_handle_missing_values():
+    # Test case: Method='mean' with missing values
+    data = np.array([1, 2, np.nan, 4, 5])
+    expected_result = np.array([1, 2, 3, 4, 5])
+    assert np.array_equal(handle_missing_values(data), expected_result)
 
-def plot_density(data, distribution):
-    x = np.linspace(min(data), max(data), 100)
-    y = distribution.pdf(x)
-    plt.plot(x, y)
-    plt.show()
-
-@pytest.mark.parametrize(
-    "data",
-    [
-        np.ones(1000),
-        np.zeros(1000),
-        np.random.randn(1000),
-        np.concatenate((np.random.randn(500), [np.nan], np.zeros(500))),
-        np.random.randn(1000),
-        np.random.exponential(scale=1, size=1000)
-    ]
-)
-def test_fit_distribution(random_data, data):
-    distribution = fit_distribution(data)
-    
-    if check_constant_values(data):
-        assert distribution == "Constant Distribution"
-    
-    elif check_zero_variance(data):
-        assert distribution == "Zero Distribution"
-        
-    else:
-        assert isinstance(distribution, dict)
-
-@pytest.mark.parametrize(
-    "data",
-    [
-        np.array([1, 1, 1, 1]),
-        np.array([1, 1, 1]),
-        random_data()
-    ]
-)
-def test_select_best_distribution(random_data, data):
-    distribution = select_best_distribution(data)
-    
-    if check_constant_values(data):
-        assert distribution == "Constant Distribution"
-        
-    elif check_zero_variance(data):
-        assert distribution == "Zero Distribution"
-    
-    elif distribution in ["Normal", "Gamma"]:
-        assert distribution in ["Normal Distribution", "Gamma Distribution"]
-    
-    else:
-        assert distribution == "Other Distribution"
-
-@pytest.mark.parametrize(
-    "data",
-    [
-        np.ones(1000),
-        np.zeros(1000),
-        random_data(),
-        np.repeat(1, 100),
-        np.arange(100),
-        np.concatenate((random_data(), [np.nan], random_data()))
-    ]
-)
-def test_generate_random_samples(random_data, data):
-    if check_zero_variance(data) or check_constant_values(data) or np.isnan(data).any():
+# Refactor redundant tests into consolidated ones
+@pytest.mark.parametrize("data, method, fill_value, expected_result", [
+        (np.array([1]), 'fill', None , ValueError),
+        (np.array([2]), 'fill', None , ValueError),
+        (np.array([]), 'mean', None , ValueError)
+])
+def test_handle_missing_values_invalid_fill_method_error(data):
         with pytest.raises(ValueError):
-            generate_random_samples(data)
-    else:
-        samples = generate_random_samples(data)
-        assert len(samples) == len(data)
+            handle_missing_values(data)
 
-@pytest.mark.parametrize("data", [random_data()])
-def test_plot_histogram(random_data, data):
-    plot_histogram(data)
 
-@pytest.mark.parametrize("data", [random_data()])
-def test_plot_density(random_data, data):
-    plot_density(data, norm()
+# Test functions for handle_zeroes 
+def test_handle_zeroes():
+    
+   #Case No Zeroes
+    
+   @pytest.mark.parametrize("data", [np.array([]),  
+                                     [np.nan]*10,
+                                     [float('inf')]])
+   
+   def test_handle_zeroes_nozeroes(self,data):
+       expected_output=data
+      
+       assert.rray_equal(handle_zeros(self,data),expected_output)
+       
+   def test_handle_zeroes_single(self):
+       expected_output=np.arrary([0].*10)
+       
+       assert.rray_equal(handle_zeros(np.arrary[[]]),expected_output)
+       
+   def test_handle_Zero_multile(self,data):
+         expected_output=np.arrary[0].*10)
+         
+         assert.rray_equal(handle_zeros(np.arrary[[]]),expected_output)
+         
+   def test_handle_allzero(self,data):
+         expected_output=np.arrary[0].*10)
+         
+         assert.rray_equal(handle_zeros(np.arrary[[]]),expected_output)
+
+
+def test_calculate_mean():
+    
+     @pytest.mark.parametrize("data")
+     def test_calculate_mean_empty(self,data):
+         empty_data=[]
+         mean=calculate_mean(self,data)
+        
+         return mean
+   
+     @pytest.mark.parametrize("data")
+      def calculate_mean_single_element(self,data):
+          single_data=[3]
+          mean=calculate_mean(single_data)
+          
+          return mean
+   
+      @pytest.mark.parametrize("data")
+      def test_calculate_mean_pos_neg_value(self,data):
+           pos_neg_data=[-2,-3,-4,-6.8]
+           mean=calculate_mean(pos_neg_data)
+           
+           return mean
+    
+      @pytest.mark.parametrize("data")
+      def calculate_mean_missing_value(self,data):
+           missing_data=[-2,np.nan]
+           mean=calculate_mean(missing_data)
+
+#Test function of Calculate Variance 
+       
+@pytest.mark.paramtrize('test_case',[
+    
+      {'input':[], 'expected_result':0},
+      {'input':[5],'expected_result':0},
+      {'input':[-2,-3,-6],'expected_result':-2.5},
+      
+ ])
+     
+def calculate_variance(test_case):
+      result=calculate_variance(test_case['input'])
+      
+      return result==test_case['expectedvalue']
+        
+    
+    
+@pytest.mark.paramtrize('test_case',[
+    
+      {'input':[], 'expected_result':ValueError},
+      {'input':[5],'expected_result':ValueError},
+     
+ ])
+     
+def calculate_standard_deviation(test_case):
+      
+     result= calculate_standard_deviation(test_case['input'])
+      
+     return result==test_case['expectedvalue']
+
+@pytest.mark.paramtrize('test_case',[
+    
+      {'input':[], 'expected_result':ValueError},
+      {'input':[5],'expected_result':ValueError}
+     
+ ])
+     
+def calculate_skewness(test_case):
+      
+     result=calculate_skewness(test_case['input'])
+      
+     return result==test_case['expectedvalue']
+   
+@pytest.mark.paramtrize('test_case',[
+    
+      {'input':[], 'expected_result':ValueError}
+     
+ ])
+     
+def calculate_kurtosis(test_case):
+
+     result=calculate_kurtosis(test_case['input'])
+      
+     return result==test_case['expectedvalue']
+   
+@pytest.mark.paramtrize('test_cases',[
+    
+      {'input':[0.6],'exp_resutl':[beta]},
+      
+ ])
+     
+def fit_beta_distribution(test_cases):
+
+     fitted_dist= fit_beta_distribution(input[test_cases]) 
+   
+     return fitted_dist==paramtrized
+    
+import numpy as random 
+
+from scipy.stats import weibull_min
+
+@pytest.mark.paramatrize('testcase',[])
+ 
+self.test_fit_weibull_with_valid_data:
+   
+       random.seed(0)
+       
+       valid_input=[10]
+       
+       output=fit_weibull(valid_input)
+
+        return output.isinstance(weibull_min)
+
+
+@pytest.mark.paramatrize('testcase',['valid_input'])
+
+self.test_fit_weibull_with_valid_data:
+  
+       random.seed(0)
+
+       valid_input=[10,np.nan]
+       
+       output=fit_weibull(valid_input)
+
+        return output.isinstance(weibull_min)
+
+
+@pytest.mark.paramatrize('testcase',['const_input'])
+
+self.test_fit_weibull_with_valid_data:
+  
+       random.seed(0)
+
+       const_input=[10]*100
+    
+       with pytest.raises(ValueError):
+
+            fit_weibull(const_input)
+
+#Test Function of Fit Pareto
+            
+            
+@pytest.params.paramatrized('params'['param'],[(params)])
+
+self.test_fit_pareto:
+
+        params.input=[0,nan]
+        
+        params.output.fit_pareto(params.input)==asserts(parametrized)
+
+

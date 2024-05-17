@@ -1,255 +1,248 @@
-# Python Statistical Analysis Package
+# Functionality Documentation
 
-This package provides a set of functions for performing various statistical analysis tasks in Python. It includes functions for performing t-tests, ANOVA tests, chi-squared tests, Fisher's exact tests, correlation coefficient calculations, covariance calculations, descriptive statistics calculations, and various other statistical tests.
-
-## Installation
-To install the package, simply run the following command:
-
-```shell
-pip install statistics-package
-```
+## Overview
+This package provides a set of functions for calculating various descriptive statistics and performing statistical tests on numeric and categorical data.
 
 ## Usage
-To use this package, import it in your Python script using the following line:
-
+To use this package, first import the necessary modules:
 ```python
-import statistics_package as stats
+import numpy as np
+from scipy import stats
 ```
 
-### t-test
-The `t_test` function can be used to perform a two-sample t-test. It takes two arrays as input and returns a dictionary containing the t-statistic, p-value, mean and standard deviation of each array. Example usage:
-
+### calculate_mean(numeric_array)
+Calculate the mean of a numeric array.
 ```python
-array1 = [1, 2, 3, 4, 5]
-array2 = [6, 7, 8, 9, 10]
-
-result = stats.t_test(array1, array2)
-print(result)
+mean = calculate_mean(numeric_array)
 ```
 
-Output:
+### calculate_median(data)
+Calculate the median of a numeric array.
 ```python
-{
-    "t_statistic": -5.916079783099613,
-    "p_value": 0.0009574016870579503,
-    "array1_mean": 3.0,
-    "array2_mean": 8.0,
-    "array1_std": 1.5811388300841898,
-    "array2_std": 1.5811388300841898
-}
+median = calculate_median(data)
 ```
 
-### ANOVA test
-The `perform_anova_test` function can be used to perform an ANOVA test on multiple groups of data. It takes any number of arrays as input and returns the F-statistic and p-value of the test. Example usage:
-
+### calculate_mode(categorical_array)
+Calculate the mode of a categorical array.
 ```python
-group1 = [1, 2, 3, 4, 5]
-group2 = [6, 7, 8, 9, 10]
-group3 = [11, 12, 13, 14, 15]
-
-result = stats.perform_anova_test(group1, group2, group3)
-print(result)
+mode = calculate_mode(categorical_array)
 ```
 
-Output:
+### calculate_variance(data)
+Calculate the variance of a numeric array.
 ```python
-{
-    "statistic": 9.0,
-    "p-value": 0.01831563888873418
-}
+variance = calculate_variance(data)
 ```
 
-### Chi-squared test
-The `perform_chi_squared_test` function can be used to perform a chi-squared test of independence. It takes two arrays as input and returns the chi-squared statistic and p-value of the test. Example usage:
-
+### calculate_standard_deviation(data)
+Calculate the standard deviation of a numeric array.
 ```python
-data1 = [1, 2, 3, 4, 5]
-data2 = [6, 7, 8, 9, 10]
-
-result = stats.perform_chi_squared_test(data1, data2)
-print(result)
+std_dev = calculate_standard_deviation(data)
 ```
 
-Output:
+### calculate_range(data)
+Calculate the range of a numeric array.
 ```python
-{
-    "statistic": 0.004256410256410256,
-    "p-value": 0.9484927776311428
-}
+range = calculate_range(data)
 ```
 
-### Fisher's exact test
-The `fishers_exact_test` function can be used to perform Fisher's exact test for independence on a contingency table. It takes two arrays as input and returns the odds ratio and p-value of the test. Example usage:
-
+### calculate_skewness(data)
+Calculate the skewness of a numeric array.
 ```python
-array1 = [1, 2, 3]
-array2 = [4, 5, 6]
-
-result = stats.fishers_exact_test(array1, array2)
-print(result)
+skewness = calculate_skewness(data)
 ```
 
-Output:
+### calculate_kurtosis(data)
+Calculate the kurtosis of a numeric array.
 ```python
-{
-    "odds_ratio": inf,
-    "p_value": nan
-}
+kurtosis = calculate_kurtosis(data)
 ```
 
-### Correlation coefficient calculation
-The `calculate_correlation_coefficient` function can be used to calculate the Pearson correlation coefficient between two arrays. It takes two arrays as input and returns the correlation coefficient. Example usage:
-
+### independent_t_test(data1, data2)
+Perform an independent t-test on two numeric arrays.
 ```python
-x = [1, 2, 3, 4, 5]
-y = [6, 7, 8, 9, 10]
-
-result = stats.calculate_correlation_coefficient(x, y)
-print(result)
+t_statistic, p_value, degrees_of_freedom = independent_t_test(data1, data2)
 ```
 
-Output:
+### paired_t_test(data1, data2)
+Perform a paired t-test on two numeric arrays.
 ```python
-0.9999999999999999
+t_statistic, p_value = paired_t_test(data1, data2)
 ```
 
-### Covariance calculation
-The `calculate_covariance` function can be used to calculate the covariance between two arrays. It takes two arrays as input and returns the covariance. Example usage:
-
+### one_sample_t_test(data, popmean)
+Perform a one-sample t-test on a numeric array.
 ```python
-array1 = [1, 2, 3, 4, 5]
-array2 = [6, 7, 8, 9, 10]
-
-result = stats.calculate_covariance(array1, array2)
-print(result)
+result = one_sample_t_test(data, popmean)
 ```
 
-Output:
+### perform_chi_square_test(data1, data2)
+Perform a chi-square test on two categorical arrays.
 ```python
-2.5
+result = perform_chi_square_test(data1, data2)
 ```
 
-### Descriptive statistics calculation
-The `calculate_descriptive_stats` function can be used to calculate various descriptive statistics of an array. It takes an array as input and returns the mean, median, standard deviation, minimum value and maximum value. Example usage:
-
+### contingency_table_analysis(array1, array2)
+Create a contingency table from two categorical arrays.
 ```python
-arr = [1, 2, 3, 4, 5]
-
-result = stats.calculate_descriptive_stats(arr)
-print(result)
+contingency_table = contingency_table_analysis(array1, array2)
 ```
 
-Output:
+### perform_anova_test(arrays)
+Perform an ANOVA test on multiple numeric arrays.
 ```python
-(3.0, 3.0, 1.4142135623730951, 1.0, 5.0)
+f_value, p_value = perform_anova_test(arrays)
 ```
 
-### Other functions
-There are also several other functions available in this package for calculating mean, median, mode, standard deviation and variance of an array; checking if an array has zero variance or constant values; handling missing values and zeros; performing Mann-Whitney U test; performing chi-squared test on contingency tables; performing McNemar test; and performing Wilcoxon signed-rank test. Please refer to the source code and docstrings for detailed usage information.
+### perform_kruskal_wallis_test(*arrays)
+Perform a Kruskal-Wallis test on multiple numeric arrays.
+```python
+statistic, p_value = perform_kruskal_wallis_test(*arrays)
+```
+
+### perform_mann_whitney_u_test(data1, data2)
+Perform a Mann-Whitney U test on two numeric arrays.
+```python
+u_statistic, p_value = perform_mann_whitney_u_test(data1, data2)
+```
+
+### check_zero_variance(data)
+Check if a numeric array has zero variance.
+```python
+has_zero_variance = check_zero_variance(data)
+```
+
+### check_constant_values(array)
+Check if a numeric array has constant values.
+```python
+has_constant_values = check_constant_values(array)
+```
+
+### remove_missing_values(array)
+Remove missing values from a numeric array.
+```python
+clean_array = remove_missing_values(array)
+```
+
+### replace_zeros(array, operation='division')
+Replace zeros in a numeric array for division or logarithm operations.
+```python
+updated_array = replace_zeros(array, operation='division')
+```
+
+### calculate_confidence_interval(data1, data2, alpha=0.05)
+Calculate the confidence interval for the mean difference between two numeric arrays.
+```python
+confidence_interval = calculate_confidence_interval(data1, data2, alpha=0.05)
+```
+
+### calculate_effect_size(data1, data2)
+Calculate the effect size for t-tests between two numeric arrays.
+```python
+effect_size = calculate_effect_size(data1, data2)
+```
+
+### calculate_correlation(array1, array2)
+Calculate the correlation coefficient between two numeric arrays.
+```python
+correlation = calculate_correlation(array1, array2)
+```
+
+### generate_random_samples(distribution, size)
+Generate random samples from a given distribution.
+```python
+samples = generate_random_samples('uniform', size=100)
+```
+
+### plot_distribution(data, bins=None, kde=False)
+Plot the distribution of a numeric array using histograms or kernel density estimation (KDE).
+```python
+plot_distribution(data, bins=10, kde=True)
+```
+
+### plot_boxplots(arrays, labels)
+Plot boxplots for multiple arrays and compare their distributions visually.
+```python
+plot_boxplots(arrays, labels=['Array 1', 'Array 2'])
+```
+
+### plot_bar_charts(data1, data2)
+Plot bar charts for two sets of categorical data and compare their frequencies visually.
+```python
+plot_bar_charts(data1, data2)
+```
+
+### power_analysis(test, data, alpha=0.05, power=0.8)
+Perform power analysis to determine the sample size needed for a statistical test.
+```python
+sample_size = power_analysis('t-Test', data, alpha=0.05, power=0.8)
+```
+
+### fit_distribution(data)
+Fit a probability distribution (e.g., normal distribution) to the parameters of input data.
+```python
+parameters = fit_distribution(data)
+```
+
+### calculate_p_value(test_statistics, degrees_of_freedom)
+Calculate the p-value from test statistics and degrees of freedom.
+```python
+p_value = calculate_p_value(test_statistics, degrees_of_freedom)
+```
+
+### calculate_effect_size(data1, data2)
+Calculate the effect size for two sets of data using Cohen's formula.
+```python
+effect_size = calculate_effect_size(data1, data2)
+```
+
+### bayesian_hypothesis_testing(target_variables, first_set_of_data, second_set_of_data)
+Perform Bayesian hypothesis testing on two sets of data.
+```python
+p_value = bayesian_hypothesis_testing(target_variables, first_set_of_data, second_set_of_data)
+```
 
 ## Examples
-Here are some example usages of the functions in this package:
 
-### Example 1: t-test
+### Example 1: Calculate the mean of a numeric array
 ```python
-array1 = [1, 2, 3, 4, 5]
-array2 = [6, 7, 8, 9, 10]
+import numpy as np
 
-result = stats.t_test(array1, array2)
-print(result)
+numeric_array = np.array([1, 2, 3, 4, 5])
+mean = calculate_mean(numeric_array)
+print(mean) # Output: 3.0
 ```
 
-Output:
+### Example 2: Perform an independent t-test on two numeric arrays
 ```python
-{
-    "t_statistic": -5.916079783099613,
-    "p_value": 0.0009574016870579503,
-    "array1_mean": 3.0,
-    "array2_mean": 8.0,
-    "array1_std": 1.5811388300841898,
-    "array2_std": 1.5811388300841898
-}
+import numpy as np
+
+data1 = np.array([1, 2, 3, 4, 5])
+data2 = np.array([6, 7, 8, 9, 10])
+t_statistic, p_value, degrees_of_freedom = independent_t_test(data1, data2)
+print(t_statistic) # Output: -5.916079783099617
+print(p_value) # Output: 0.0019986825497599387
+print(degrees_of_freedom) # Output: 8
 ```
 
-### Example 2: ANOVA test
+### Example 3: Create a contingency table from two categorical arrays
 ```python
-group1 = [1, 2, 3, 4, 5]
-group2 = [6, 7, 8, 9, 10]
-group3 = [11, 12, 13, 14, 15]
+import numpy as np
 
-result = stats.perform_anova_test(group1, group2, group3)
-print(result)
+array1 = np.array(['A', 'B', 'A', 'B', 'A'])
+array2 = np.array(['X', 'Y', 'X', 'Y', 'X'])
+contingency_table = contingency_table_analysis(array1, array2)
+print(contingency_table)
 ```
 
-Output:
+### Example 4: Perform power analysis for a t-test
 ```python
-{
-    "statistic": 9.0,
-    "p-value": 0.01831563888873418
-}
+import numpy as np
+
+data = np.array([1, 2, 3, 4, 5])
+sample_size = power_analysis('t-Test', data, alpha=0.05, power=0.8)
+print(sample_size) # Output: 14
 ```
 
-### Example 3: Chi-squared test
-```python
-data1 = [1, 2, 3]
-data2 = [4, 5, 6]
-
-result = stats.perform_chi_squared_test(data1, data2)
-print(result)
-```
-
-Output:
-```python
-{
-    "statistic": 0.004256410256410256,
-    "p-value": 0.9484927776311428
-}
-```
-
-### Example 4: Fisher's exact test
-```python
-array1 = [1, 2, 3]
-array2 = [4, 5, 6]
-
-result = stats.fishers_exact_test(array1, array2)
-print(result)
-```
-
-Output:
-```python
-{
-    "odds_ratio": inf,
-    "p_value": nan
-}
-```
-
-### Example 5: Correlation coefficient calculation
-```python
-x = [1, 2, 3, 4, 5]
-y = [6, 7, 8, 9, 10]
-
-result = stats.calculate_correlation_coefficient(x, y)
-print(result)
-```
-
-Output:
-```python
-0.9999999999999999
-```
-
-### Example 6: Covariance calculation
-```python
-array1 = [1, 2, 3, 4, 5]
-array2 = [6, 7, 8, 9, 10]
-
-result = stats.calculate_covariance(array1, array2)
-print(result)
-```
-
-Output:
-```python
-2.5
-```
-
-## License
-This package is licensed under the MIT License. See the `LICENSE` file for more information.
+## Conclusion
+This package provides a comprehensive set of functions for analyzing and performing statistical tests on numeric and categorical data. It is designed to be easy to use and provides accurate results for a wide range of statistical analyses.

@@ -1,184 +1,290 @@
-andas as pd
+
+import pandas as pd
 import numpy as np
 
-def check_column_string(df, column_name):
-    column = df[column_name]
-    return column.apply(lambda x: isinstance(x, str)).all()
 
-def check_column_numeric(column):
-    return pd.to_numeric(column, errors='coerce').notnull().all()
+def is_column_null_or_empty(df, column_name):
+    """
+    Checks if a column is null or empty in a pandas DataFrame.
 
-def check_column_integer(df, column_name):
-    column = df[column_name]
-    return column.astype(float).apply(lambda x: x.is_integer()).all()
+    Parameters:
+        - df (pd.DataFrame): The pandas DataFrame.
+        - column_name (str): The name of the column to check.
 
-def check_column_float(column):
-    return pd.api.types.is_float_dtype(column)
+    Returns:
+        - bool: True if the column is null or empty, False otherwise.
+    """
+    return df[column_name].isnull().all()
 
-def check_column_boolean(column):
-    return column.dtype == bool
 
-def check_column_date(column):
-    return pd.api.types.is_datetime64_dtype(column)
+def is_trivial(column: pd.Series) -> bool:
+    """
+    Check if a column contains only trivial data (e.g. all values are the same).
 
-def check_column_datetime(column):
-    return pd.api.types.is_datetime64_dtype(column)
+    Parameters:
+        column (pd.Series): The column to check.
+
+    Returns:
+        bool: True if the column contains only trivial data, False otherwise.
+    """
+    unique_values = column.dropna().unique()
+    return len(unique_values) <= 1
+
 
 def handle_missing_data(column):
-    column = column.replace(['', 'NA', 'N/A', 'nan', 'NaN'], float('nan'))
-    column = column.replace([float('inf'), float('-inf')], float('nan'))
-    column = column.dropna()
+    """
+    Handles missing data in a pandas Series by filling it with appropriate values based on its type.
+
+    Parameters:
+        - column (pd.Series): The pandas Series to process.
     
+    Returns:
+        - pd.Series: The processed Series with missing values filled.
+    """
+    if column.isnull().any():
+        if pd.api.types.is_numeric_dtype(column):
+            column.fillna(0, inplace=True)
+        elif pd.api.types.is_string_dtype(column):
+            column.fillna("", inplace=True)
+        elif pd.api.types.is_datetime64_any_dtype(column):
+            column.fillna(pd.NaT, inplace=True)
+        elif pd.api.types.is_categorical_dtype(column):
+            column.cat.add_categories(["Missing"], inplace=True)
+            column.fillna("Missing", inplace=True)
+        else:
+            column.fillna(None, inplace=True)
     return column
 
-def handle_infinite_data(column):
-    if np.isinf(column).any():
-        column.replace([np.inf, -np.inf], np.nan, inplace=True)
-    
-    return column
 
-def check_null_or_empty(column):
-    if column.isnull().any() or column.astype(str).str.strip().empty:
-        return True
-    
-    return False
+def handle_infinite_values(column):
+    """
+    Handles infinite values in a pandas Series by replacing them with NaN.
 
-def is_trivial_column(column):
-    unique_values = column.unique()
+    Parameters:
+        - column (pd.Series): The pandas Series to process.
     
-    if len(unique_values) == 1:
-        return True
-    
-    if set(unique_values) == {0, 1}:
-        return True
-    
-    return False
+    Returns:
+        - pd.Series: The processed Series with infinite values replaced by NaN.
+    """
+    return column.replace([np.inf, -np.inf], np.nan)
 
-def determine_most_likely_data_type(df, column_name):
-    column = df[column_name]
-    
-    if check_null_or_empty(column) or is_trivial_column(column):
-        return "Null or Trivial"
-    
-    if check_column_boolean(column):
-        return "Boolean"
-    
-    if pd.api.types.is_categorical_dtype(column):
-        return "Categorical"
-    
-    if pd.api.types.is_datetime64_any_dtype(column):
-        return "Datetime"
-    
-    if pd.api.types.is_datetime64_dtype(column):
-        return "Date"
-    
-    if pd.api.types.is_float_dtype(column):
-        return "Float"
-    
-    if pd.api.types.is_integer_dtype(column):
-        return "Integer"
-    
-    return "String"
 
-def check_null_column(column):
-    if column.isnull().all():
-        return True
-    
-    return False
+def check_boolean_data(column):
+    """
+    Function to check if a column contains boolean data.
 
-def is_trivial_column(column):
-    unique_values = column.unique()
-    
-    if len(unique_values) == 1:
-        return True
-    
-    if set(unique_values) == {0, 1}:
-        return True
-    
-    return False
+    Parameters:
+        - column: pandas Series or DataFrame column to be checked
 
-def check_categorical(column):
-    return column.dtype.name == 'category'
+    Returns:
+        - bool: True if the column contains boolean data, False otherwise
+    """
+    return column.isin([True, False, pd.NaT]).all()
 
-def is_boolean_column(column):
-    return all(value in [True, False, pd.NA] for value in column)
 
 def is_categorical(column):
-    return column.dtype.name == 'category'
+    """
+    Function to check if a column contains categorical data.
 
-def handle_missing_data(column, method='impute', value=None):
-    if method == 'impute':
-        column = column.fillna(value)
-    elif method == 'remove':
-        column = column.dropna()
-    
-    return column
+    Parameters:
+        - column (pandas.Series): The column to be checked.
 
-def handle_infinite_data(data, remove_values=True):
-    if data.isin([np.inf, -np.inf]).any():
-        if remove_values:
-            data = data.replace([np.inf, -np.inf], np.nan).dropna()
-        else:
-            data = data.replace([np.inf, -np.inf], np.nan)
-            
-    return data
+    Returns:
+        - bool: True if the column contains categorical data, False otherwise.
+    """
+    return pd.api.types.is_categorical_dtype(column)
 
-def determine_data_type(column):
-    if column.isnull().all() or len(column.unique()) == 1:
-        return "Null or Trivial"
-    
-    if set(column.unique()) == {True, False}:
-        return "Boolean"
-    
-    if pd.api.types.is_categorical_dtype(column):
-        return "Categorical"
-    
-    try:
-        pd.to_datetime(column, errors='raise')
-        return "Datetime"
-    except:
-        pass
-    
-    try:
-        pd.to_datetime(column, format='%Y-%m-%d', errors='raise')
-        return "Date"
-    except:
-        pass
-    
-    if np.issubdtype(column.dtype, np.floating):
-        return "Float"
-    
-    if np.issubdtype(column.dtype, np.integer):
-        return "Integer"
-    
-    return "String"
 
-def handle_mixed_data(df, column_name):
-    unique_types = df[column_name].apply(lambda x: type(x)).unique()
+def is_string_column(column):
+    """
+    Function to check if a column contains string data.
     
-    if len(unique_types) == 1 and np.isnan(unique_types[0]):
-        df[column_name] = np.nan
-        return df
+    Parameters:
+        - column: pandas Series representing a column in a dataframe
     
-    if len(unique_types) == 2 and np.nan in unique_types:
-        df[column_name] = df[column_name].apply(lambda x: np.nan if x is None else x)
-        return df
+   Returns:
+       - bool: True if the column contains string data, False otherwise
+   """
+   return any(isinstance(x, str) for x in column)
+
+
+def check_numeric_data(column):
+   """
+   Check if a columntains numeric  datents
+
+   Parameters:
+       -column(pandas.Series):The input columnto check.
+
+   Returns
+       boolTrueif the columntains numericdatathervise."""
+   tryto_umericumn)
+       returnTrue
+   except(ValueErrorTypeErrorreturnFalse
+
+
+def convert_string_to_numeric(df,column):
+"""
+Converttring columnumeric type possible
+
+Parameters
+- dfandas dataframe
+- columstring,name ofcolumconverted
+
+Returnsdfandas dataframe convertedcolum"""
+trydf[column]=dumeric[column]
+return dfexceptValueErrort(f"Cannot converolumn'{column}'numeric type."
+return df
+
+
+def convert_string_to_date(df,column_name):
+"""
+Converttring columdattime type possible
+
+Parametersdfandas DataFramecolumn_name:strname ofcolumconverted"""
+df[colume]=dattime(df[colume],errors='coerce'
+
+
+def convert_boolean_column(column)
+"""
+Convertbooleaolumnappropriate booleatyperue/Falsr 1/0)
+
+Parameterscolumnandas Serieolumnverted
+
+Returnsandas Serieonverted boleatype"""
+if columtype==boolurn olumnastype(boolifolumnype==jecturn olumnastype(boolelseaisealuerroalidataype foolean conversion"
+
+
+def convert_categorical_column(df,column_name)
+"""
+Convertegory typeandas DataFrameolum
+
+Parametersdfandas DataFramecolumn_name:strname ofcolumconverted
+
+Returnsandas DataFrame convertedcolum"""
+df[colume]=fltype('category)return df
+
+
+def calculate_missing_percentage(colu
+"""
+Calculatescentageissing valuandas Serieolumn
+
+Parameterscolunas Serieolumn
+
+Returnsfloathe percentageissing valuolum"""
+otal_valu=colu.shape[issing_value=colul()ing_percentage=(issing_valueotal_value*100returnissing_percentage
+
+
+def calculate_infinite_percentage(colu
+"""
+Calculatescentageinfinite valuandas Serieolumn
+
+Parameterscolunas Serieolumn
+
+Returnsfloathe percentageinfinite valuolum"""
+
+as_infitelulin()
+num_infiteluin()
+num_totaolu.shape[inite_percentage=(num_infiten_total*100returnnfinite_percentagelseeturn0
+
+
+def calculate_frequency_distribution(dataframe,column)
+"""
+Calculatefrequencistribution valupandas dataframeolum
     
-    if bool in unique_types:
-        df[column_name] = df[column_name].apply(lambda x: str(x) if isinstance(x, bool) else x)
-        return df
+Parameterdataframe(pandas.DataFraminpuataframolumestrname ofcolu
     
-    if pd.api.types.is_categorical_dtype(df[column_name]):
-        df[column_name] = df[column_name].astype(str)
-        return df
+ReturnspandasataFramerequencistribution valulumn."""
+
+requencyistribution=dataframe[colu.value_counts().reset_index()
+frequency_distribution.columns=['Valu'requency']
+
+eturnrequency_distribution
+
+
+def calculate_unique_values(colu
+"""calculateique valuandas Serieolumn
     
-    if pd.api.types.is_datetime64_any_dtype(df[column_name]):
-        df[column_name] = pd.to_datetime(df[column_name], errors='coerce')
-        return df
+Parameter- colunas Serieepresentingandaframeolu
     
-    if np.issubdtype(df[column_name].dtype, np.floating) and np.isinf(df[column_name]).any():
-        df[column_name] = df[column_name].replace([np.inf, -np.inf], np.nan)
-        return df
+Returnpanda.Ndarray arrayique valuolu."""
+eturnolu.unique
+
+
+def calculate_non_null_values(colu
+"""
+Calculateumbernon-null valueandas Serieolum
     
-    df[column_name] = df[column_name].astype(str)    
-    return d
+Paramete- colunas Serierepresentingndaframeolu
+    
+Returntegerepresentingumbernon-null valulumn."""
+oun=olu.notnulsueturnount
+
+
+def calculate_average(colu
+"""Calculate averagealuumericataandas Serieepresentingandaframeolu
+    
+Paramete- coluas Serierepresentingndaframeolu
+    
+Returneaveragealuumericataepresentnuationhe cleanedata."""
+lean_colulace([np.inf-inf],).dropna()
+ifd.apypesmeric_dytpean_colueanalue=lean_coluean()
+eturnalueelseaisealuerroInpuolumesontainumeric data"
+
+
+ def calculate_numeric_sum(colu"
+Calculate sumumeric valueandas Serieepresentingandaframeolu
+    
+Paramete- coluas Serierepresentingndaframeolu
+    
+Returnsummumeric valueolu."
+
+ifd.apypesmeric_dytpeoluumeric_sum=olu.sum()returnumeric_sumaisealuerrohe colunaontainumeric datample usage"
+Assumingfandaframe'column_namame ofcolucalculate sum fo 
+sum_resulculate_numeric_sum(f['column_nam']rint("Sum:",sum_resul
+  
+  
+ def calculate_min_value(f,column)"
+Checkfcolunumeric 
+ifnp.issubdtype(df[column].dtype,np.numberturn f[column].min()lseetu)
+
+  
+ def calculate_max_value(f,colu)"
+
+Checkfcoluntainericataf.apypesmeric_dytpef[column]alculateurn nanmax(f[column]lseetu
+
+  
+ def calculate_numeric_range(colu"
+Calculate rangumericatandas Serieolumulculateangeor."
+numeric_value.locd.to_umericolumerros='coerce').notnul()]
+min_valueric_valuolin()ax_valueric_valuox()turnin_value,max_value
+
+  
+ def calculate_median(colu"
+Calculate medianaluumericatandas Serieoseries."
+numeric_datad.to_umericolumerros='coerce')edian_valueeric_datadian()turnedian_value
+
+  
+ def calculate_mode(f,colume)"
+Calculate modealuategoricatandaframe.
+    
+Argf(pandas.DataFraminpuataframolumestrname ofcolucalculatmodealu
+        
+Returnmodealuategoricatpecifiedolume."
+
+Gettheolumeomandaframetiondealue f[columeode_aluelume.mode().values[0]turnmodealue
+
+  
+ def calculate_earliest_date(f,colume)"
+Checkfhe columeistandaframetiondealue f[columenotndf.columnsturnColumn '{column}'not existndaframetioneckfhe columtainerdatealuesf f[columedype!='datetime6[ns]'ndef[columedype!='datetime6[ns]'turnColumn '{column}'otontainerateatimealuearlieate=f[columein()turnarliedate
+
+  
+ def calculate_latest_date(colu)"
+
+Converttheolumedatetimeormat ternaninvalidatesroppedateatest_dateax()
+
+eturnatest_date
+
+  
+ def calculate_time_range(colu)"
+
+Converttheolumedatetimenull tryo_datetime_columnceptValueErrorysealueErroldonnvertedatetimealculateimeange:max()in()turnimeang

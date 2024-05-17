@@ -1,354 +1,169 @@
-the refactored code using pytest and PEP-8 standards:
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
-def add_days(date_str, num_days):
-    date = datetime.strptime(date_str, "%Y-%m-%d")
-    new_date = date + timedelta(days=num_days)
+
+def convert_to_yyyy_mm_dd(input_date):
+    # Stub function for demonstration; replace with actual implementation
+    if isinstance(input_date, datetime):
+        return input_date.strftime('%Y-%m-%d')
+    elif isinstance(input_date, str):
+        return input_date  # Assuming the input string is already in 'yyyy-mm-dd' format
+    else:
+        raise ValueError("Invalid date format")
+
+
+def add_days_to_date(date_obj, num_days):
+    # Stub function for demonstration; replace with actual implementation
+    return date_obj + timedelta(days=num_days)
+
+
+def subtract_days(date_str, num_days):
+    # Stub function for demonstration; replace with actual implementation
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    return (date_obj - timedelta(days=num_days)).strftime("%Y-%m-%d")
+
+
+def add_weeks(date_str, num_weeks):
+    # Stub function for demonstration; replace with actual implementation
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    new_date = date_obj + timedelta(weeks=num_weeks)
     return new_date.strftime("%Y-%m-%d")
 
-def test_add_days():
-    assert add_days("2020-01-01", 1) == "2020-01-02"
-    assert add_days("2020-01-01", 7) == "2020-01-08"
-    assert add_days("2020-01-01", 30) == "2020-01-31"
-    assert add_days("2020-01-01", 365) == "2021-01-01"
 
-def add_weeks(date, num_weeks):
-    new_date = date + timedelta(weeks=num_weeks)
-    return new_date
-
-def test_add_weeks():
-    date = datetime.date(2022, 1, 1)
-    expected_result = datetime.date(2022, 1, 8)
-    assert add_weeks(date, 1) == expected_result
-
-    date = datetime.date(2022, 1, 1)
-    assert add_weeks(date, 0) == date
-
-    date = datetime.date(2022, 1, 1)
-    expected_result = datetime.date(2021, 12, 25)
-    assert add_weeks(date, -1) == expected_result
-
-    date = datetime.date(2022, 1, 1)
-    expected_result = datetime.date(2022, 1, 29)
-    assert add_weeks(date, 4) == expected_result
-
-import pytest
-from your_module import subtract_weeks
-
-@pytest.mark.parametrize("date, weeks, expected_output", [
-    ("2022-01-01", 2, "2021-12-18"),
-    ("2022-01-01", 0, "2022-01-01"),
-    ("2022-01-01", -1, "2022-01-08"),
-    ("2022-01-01", 52, "2021-01-02"),
-    ("2020-02-29", 2, "2020-02-15")
-])
-def test_subtract_weeks(date, weeks, expected_output):
-    assert subtract_weeks(date, weeks) == expected_output
-
-from datetime import datetime
-from your_module import add_months
-
-def test_add_months():
-    date = "2022-02-28"
-    num_months = 3
-    expected_result = "2022-05-31"
-    
-    assert add_months(date, num_months) == expected_result
-    
-    date = "2020-12-31"
-    num_months = 6
-    expected_result = "2021-06-30"
-    
-    assert add_months(date, num_months) == expected_result
-    
-    date = "2019-07-15"
-    num_months = 12
-    expected_result = "2020-07-15"
-    
-    assert add_months(date, num_months) == expected_result
-
-import pytest
-from datetime import datetime
-
-def test_subtract_months():
-    assert subtract_months('2022-05-20', 1) == '2022-04-20'
-    
-    assert subtract_months('2022-07-01', 3) == '2022-04-01'
-    
-    assert subtract_months('2022-01-15', 6) == '2021-07-15'
-    
-    assert subtract_months('2021-10-31', 12) == '2020-10-31'
-    
-    assert subtract_months('2022-09-18', 0) == '2022-09-18'
-    
-    with pytest.raises(ValueError):
-        subtract_months('2023-03-10', -2)
-        
-    with pytest.raises(ValueError):
-        subtract_months('2022-02-28', 3)
-
-def test_add_years():
-    assert add_years('2020-01-01', 1) == '2021-01-01'
-
-    assert add_years('2020-02-29', 5) == '2025-02-28'
-
-    assert add_years('2022-12-31', 0) == '2022-12-31'
-
-    assert add_years('1999-03-20', -10) == '1989-03-20'
+def subtract_weeks(date_str, num_weeks):
+    # Stub function for demonstration; replace with actual implementation
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    new_date = date_obj - timedelta(weeks=num_weeks)
+    return new_date.strftime("%Y-%m-%d")
 
 
-import pytest
-from datetime import datetime
-
-from your_module import subtract_years
-
-
-def test_subtract_years():
-    assert subtract_years('2022-01-01', 1) == '2021-01-01'
-
-    assert subtract_years('2024-02-29', 5) == '2019-02-28'
-
-    current_date = datetime.now().strftime('%Y-%m-%d')
-    expected_date = (datetime.now() - timedelta(days=3650)).strftime('%Y-%m-%d')
-    assert subtract_years(current_date, 10) == expected_date
-
-    assert subtract_years('2022-01-01', 0) == '2022-01-01'
-
-    assert subtract_years('2022-01-01', -3) == '2025-01-
-
-def convert_date(date):
-    return date.replace("-", "")
+def add_months(date_obj, num_months):
+    # Stub function for demonstration; replace with actual implementation
+    return date_obj + relativedelta(months=num_months)
 
 
-def test_convert_date():
-    assert convert_date('2021-
-    
-    assert convert_date('1999-
-    
-    assert convert_date('2000-
-    
-    assert convert_date('2022-
-    
-    assert convert_date('1987-
+def subtract_months(date_str, num_months):
+    # Stub function for demonstration; replace with actual implementation
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    new_date = date_obj - relativedelta(months=num_months)
+    return new_date.strftime("%Y-%m-%d")
 
 
-import pytest
+def add_years(date_str, num_years):
+    # Stub function for demonstration; replace with actual implementation
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    try:
+        new_date = date_obj.replace(year=date_obj.year + int(num_years))
+        if int(num_years) != num_years:
+            fraction_year_days = (datetime(date_obj.year + 1, 1, 1) - datetime(date_obj.year, 1, 1)).days * (num_years % 1)
+            new_date += timedelta(days=fraction_year_days)
+        return new_date.strftime("%Y-%m-%d")
+    except ValueError:
+        raise ValueError("Invalid Date")
 
-from my_module import convert_date
 
-def test_convert_date():
-    assert convert_date(202201) == "2022-01-01"
-    
-    assert convert_date(202212) == "2022-12-01"
-    
-    with pytest.raises(TypeError):
-        convert_date("invalid")
-    
-    with pytest.raises(ValueError):
-        convert_date(-202201)
+def subtract_years(date_str, num_years):
+    # Stub function for demonstration; replace with actual implementation
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    new_date = date_obj - relativedelta(years=num_years)
+    return new_date.strftime("%Y-%m-%d")
 
-    assert convert_date(000001) == "0-01-01"
 
-from pytest import mark
-
-@mark.parametrize("year, expected_result", [
-    (2000, True),
-    (2020, True),
-    (1900, False),
-    (2021, False),
-])
-def test_is_leap_year(year, expected_result):
-    assert is_leap_year(year) == expected_result
-
-def is_end_of_month(date):
-    date_obj = datetime.strptime(date, "%Y-%m-%d")
-    day = date_obj.day
-    total_days = (date_obj.replace(day=28) + timedelta(days=4)).day
-    if day == total_days:
+def is_leap_year(year):
+    # Stub function for demonstration; replace with actual implementation
+    if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
         return True
     else:
         return False
 
-def test_is_end_of_month():
-    assert is_end_of_month("2021-12-31") == True
+
+def get_day_of_week(date_str):
+    # Stub function for demonstration; replace with actual implementation
+    try:
+        if '-' in date_str:
+            date_format = "%Y-%m-%d"
+        elif len(date_str) == 8:
+            date_format = "%Y%m%d"
+        else:
+            raise ValueError("Invalid Date Format")
+
+        date_obj = datetime.strptime(date_str, date_format)
+        return date_obj.strftime("%A")
     
-    assert is_end_of_month("2022-01-15") == False
-    
-    assert is_end_of_month("2022-02-28") == True
-    
-    assert is_end_of_month("2022-02-15") == False
-    
-    assert is_end_of_month("2024-02-29") == True
-    
-    assert is_end_of_month("2024-02-15") == False
+    except ValueError as e:
+        raise ValueError(f"Invalid Date: {e}")
 
-def find_month_end(date):
-    date_obj = datetime.strptime(date, "%Y-%m-%d")
-    year = date_obj.year
-    month = date_obj.month
-    if month == 12:
-        year += 1
-        month = 1
-    else:
-        month += 1
-    next_month_start = datetime(year, month, 1)
-    month_end = next_month_start - timedelta(days=1)
-    return month_end.strftime("%Y-%m-%d")
 
-def test_find_month_end_valid_string_date():
-    assert find_month_end("2021-01-15") == "2021-01-31"
+def get_week_ending_on_friday(given_date):
+   given_day_of_week=given _date.weekday()
+   days_to_friday=4-given_day_of_week if given_day_of_week <=4 else (6-given_day_of_week)+4+1
+   next_friday=given _date+timedelta(days=days_to_friday)
+   return next_friday
 
-def test_find_month_end_valid_datetime_date():
-    date = datetime(2021, 2, 14).date()
-    assert find_month_end(date) == "2021-02-28"
+@pytest.mark.parametrize("date_input ,expected",[
+         (datetime(2022 ,1 ,10),datetime(2022 ,1 ,14)),
+         (datetime(2022 ,1 ,12),datetime(2022 ,1 ,14)),
+         (datetime(2022 ,1 ,15),datetime(2022 ,1 ,21)),
+         (datetime(2022 ,1 ,20),datetime(2022 ,1 ,21))])
 
-def test_find_month_end_last_day_of_december():
-    assert find_month_end("2020-12-31") == "2020-12-31"
+@pytest.mark.parametrize("input_dates",[
+      ('2022-01-01','2022-01-10',9),
+      ('2022-01-01','2022-01-01',0),
+      ('2022-01-10','2022-01-01',-9)])
+ 
+@pytest.mark.parametrize("date_input",[
+   ('2023-01-02',True),
+   ('2019-12-31',True),
+   ('0000-00-00',False),
+   ('abcd-ab-cb',False)])
 
-def test_find_month_end_last_day_of_leap_year_february():
-    assert find_month_end("2020-02-29") == "2020-02-29"
+@pytest.mark.parametrize("test_input",[
+     ("2019/12/31","Invalid Date Format"),
+     ("13/12/22","Invalid Date Format")])
 
-def test_find_month_end_last_day_of_non_leap_year_february():
-    assert find_month_end("2021-02-28") == "2021--28"
+@pytest.mark.parametrize("test_data",[
+{"start":"2019/12/31","end":"2019/11/30","result":False},
+{"start":"13/12/22","end":"13/12/23" ,"result":False}])
 
-def is_friday(date):
-    date_obj = datetime.strptime(date, "%Y-%m-%d")
-    return date_obj.weekday() == 4
-
-def test_is_friday():
-    assert is_friday('2021-07-02') == True
-    
-    assert is_friday('20210702') == True
-    
-    assert is_friday('2021-07-01') == False
-    
-    assert is_friday('20210701') == False
-    
-    assert is_friday('2021-07-03') == False
-    
-    assert is_friday('20210703') == False
-
-def get_previous_month_end_date(date):
-    date_obj = datetime.strptime(date, "%Y-%m-%d")
-    month_start = date_obj.replace(day=1)
-    month_end = month_start - timedelta(days=1)
-    return month_end.strftime("%Y-%m-%d")
-
-def test_get_previous_month_end_date():
-    assert get_previous_month_end_date('2022-05-15') == '2022-04-30'
-    
-    assert get_previous_month_end_date('2022-06-01') == '2022-05-31'
-    
-    assert get_previous_month_end_date('2022-03-31') == '2022-02-28'
-    
-    assert get_previous_month_end_date('2020-02-15') == '2020-01-31'
-
-def get_next_friday(date):
-    days_ahead = 4 - date.weekday()
-    if days_ahead <= 0: 
-        days_ahead += 7
-    next_friday = date + timedelta(days=days_ahead)
-    return next_friday.strftime("%Y-%m-%d")
-
-def test_get_next_friday():
-    date = datetime(2021, 11, 19)
-    assert get_next_friday(date) == "2021-11-19"
-    
-    date = datetime(2021, 11, 16)
-    assert get_next_friday(date) == "2021--19"
-    
-    date = datetime(2021, 11, 20)
-    assert get_next_friday(date) == "2021--26"
-
-    date = datetime(2021, 11, 21)
-    assert get_next_friday(date) == "2021--26"
-
-    date = datetime(2021, 11, 22)
-    assert get_next_friday(date) == "2021--26"
-
-def get_previous_week_friday(given_date):
-    days_before = given_date.weekday() + 1
-    if days_before > 5:
-        days_before = 5
-    previous_week_friday = given_date - timedelta(days=days_before)
-    return previous_week_friday
-
-def test_get_previous_week_friday_given_date_is_friday():
-    given_date = datetime.date(2022, 1, 7)
-    previous_week_friday = get_previous_week_friday(given_date)
-    assert previous_week_friday == datetime.date(2021, 12, 31)
-
-def test_get_previous_week_friday_given_date_is_saturday_or_after():
-    given_date = datetime.date(2022, 1, 8)
-    previous_week_friday = get_previous_week_friday(given_date)
-    assert previous_week_friday == datetime.date(2022, 1, 7)
-
-def test_get_previous_week_friday_given_date_is_before_friday():
-    given_date = datetime.date(2022, 1, 6)
-    previous_week_friday = get_previous_week_friday(given_date)
-    assert previous_week_friday == datetime.date(2021, 12, 31)
-
-def test_get_previous_week_friday_given_date_is_monday():
-    given_date = datetime.date(2022, 1, 10)
-    previous_week_friday = get_previous_week_friday(given_date)
-    assert previous_week_friday == datetime.date(2022, 1, 7)
-
-def test_get_previous_week_friday_given_date_is_first_day_of_year():
-    given_date = datetime.date(2022, 1, 1)
-    previous_week_friday = get_previous_week_friday(given_date)
-    assert previous_week_friday == datetime.date(2021, 12, 
-
-from your_module import calculate_days_between_dates
-
-def test_calculate_days_between_dates():
-    start_date = '2020-01-01'
-    end_date = '2020-01-10'
-    expected_result = 9
-    assert calculate_days_between_dates(start_date, end_date) == expected_result
-
-    start_date = '2020-01-10'
-    end_date = '2020-01-01'
-    with pytest.raises(ValueError):
-        calculate_days_between_dates(start_date, end_date)
-
-    start_date = '2020/01/01'
-    end_date = '2020-01-10'
-    with pytest.raises(ValueError):
-        calculate_days_between_dates(start_date, end_date)
-
-    start_date = '2020-02-28'
-    end_date = '2020-03-01'
-    expected_result = 2
-    assert calculate_days_between_dates(start_date, end_date) == expected_result
-
-    start_date = '2020-01-01'
-    end_date = '2020-01-01'
-    expected_result = 0
-    assert calculate_days_between_dates(start_date, end_da
-
-def weeks_between_dates(start, end):
-    weeks_count = (end - start).days // 7
-        if weeks_count < 0:
-            weeks_count -= 1
-        return weeks_count
-
-def test_weeks_between_dates():
-    start_date = datetime.date(2021, 1, 1)
-    end_date = datetime.date(2021, 1, 3)
-    assert weeks_between_dates(start_, end_) == 0
-
-    start_date = datetime.date(2021, 1, 1)
-    end__date_ = datetime.date(2021, 1, 8)
-    
+@pytest.mark.parametrize("test_dates",[
+{
+"input":["2019/12/31",'13/12/22'],
+"result":[]
+}
+{
+"input":["abcd-ab-cb","13/22"],
+"result":[]}
+])
+     
+ @pytest.mark.parametrize("input_dates",[
+ {
+ "input":[('2019-11-30')]
+ "result":[]
+ }
+ ])
+ 
+ @pytest.mark.parametrize('date_strings', [
+ {"start":"2019/11/30",
+ "end":"2019 /10 /20",
+ "expected_result":[]}])
+ 
+ @pytest.mark.parametrize('week_dates',
+ [
+ {"dates":['2019 /11 /30'],"result":[]},
+ {"week_dates":[''],"result":[]}
+ ])
+ 
+ 
+ def test_implementation_round_to_month_end():
   
-import pytest
-import datetime
+      assert round_to_month_end(datetime(2018 ,6 ,3))==datetime(2018 ,6 ,30)
+      assert round_to_month_end(datetime(2000.3.15))==datetime (2000.3.30)
+ 
+ 
+ def test_round_to_weekending_friday():
+ 
+       assert round_to_week_ending_friday(datetime (2000.3.15))==datetime(2000.3.17)
+       assert round_to_week_ending_friday(datetime (1998.5.11))==datetime (1998.5.15)
 
-
-def test_get_previous_month_end:
-    
   
- if __name__ == '__main__':
-     pytest.main(

@@ -1,673 +1,1163 @@
-andas as pd
+
+import pandas as pd
 import numpy as np
-from scipy.stats import entropy, chi2_contingency
+from scipy.stats import ttest_ind, chi2_contingency, fisher_exact
+from sklearn.preprocessing import LabelEncoder
+from sklearn.cluster import KMeans
+from sklearn.manifold import TSNE
+from imblearn.over_sampling import RandomOverSampler, SMOTE
+from imblearn.under_sampling import RandomUnderSampler
+from sklearn.utils import class_weight
 import matplotlib.pyplot as plt
 import seaborn as sns
-import statsmodels.stats.multicomp as mc
-from scipy.stats import f_oneway, pointbiserialr
-import math
 
-
-def is_valid_dataframe(data):
+def calculate_unique_categories(column):
     """
-    Function to check if the input is a valid pandas dataframe.
-    
-    Parameters:
-        data (any): The input data to be checked.
-        
-    Returns:
-        bool: True if the input is a valid pandas dataframe, False otherwise.
-    """
-    return isinstance(data, pd.DataFrame)
-
-
-def is_categorical_column(column):
-    """
-    Checks if the input column is a valid categorical column.
-    
-    Parameters:
-        - column (pandas.Series): The input column to be checked.
-        
-    Returns:
-        - bool: True if the column is a valid categorical column, False otherwise.
-    """
-    return isinstance(column, pd.Series) and column.dtype == 'object'
-
-
-def calculate_unique_count(column):
-    """
-    Calculate the count of unique values in a column.
+    Calculate the number of unique categories in a categorical column.
 
     Parameters:
-    column (pandas.Series): The column to analyze.
+        column (pandas.Series): The categorical column.
 
     Returns:
-    int: The count of unique values.
+        int: The number of unique categories.
     """
     return len(column.unique())
 
-
-def calculate_missing_values(column):
+def calculate_category_count(column):
     """
-    Calculate the prevalence of missing values in a column.
+    Calculates the count of each category in a categorical column.
 
     Parameters:
-        column (pandas Series): The column to analyze
+        column (pandas.Series): The categorical column to analyze.
 
     Returns:
-        float: The prevalence of missing values in the column
+        pandas.Series: A series containing the count of each category.
     """
+    return column.value_counts()
 
-    # Count the number of missing values in the column
+def calculate_category_percentage(column):
+    """
+    Function to calculate the percentage of each category in a categorical column.
+
+    Parameters:
+        column (pandas.Series): The categorical column to calculate percentages for.
+
+    Returns:
+        pandas.DataFrame: A dataframe with two columns - 'Category' and 'Percentage'.
+    """
+    category_counts = column.value_counts()
+    category_percentages = category_counts / category_counts.sum() * 100
+    return pd.DataFrame({'Category': category_percentages.index, 'Percentage': category_percentages.values})
+
+def calculate_mode(column):
+    """
+    Calculate the mode (most common value) in a categorical column.
+
+    Parameters:
+        column (pandas.Series): The categorical column.
+
+    Returns:
+        list: List of mode(s) in the column.
+    """
+    if not pd.api.types.is_categorical_dtype(column):
+        raise ValueError("Input column should be of categorical data type.")
+    
+    value_counts = column.value_counts()
+    
+    max_frequency = value_counts.max()
+    
+    modes = value_counts[value_counts == max_frequency].index
+    
+    return modes.tolist()
+
+def calculate_missing_prevalence(column):
+    """
+    Calculate the prevalence of missing values in a categorical column.
+    
+    Parameters:
+        column (pandas.Series): The categorical column to analyze.
+        
+    Returns:
+        float: The prevalence of missing values in the column.
+    """
     num_missing = column.isnull().sum()
-
-    # Calculate the total number of values in the column
-    total_values = len(column)
-
-    # Calculate the prevalence of missing values
-    prevalence = num_missing / total_values
-
-    return prevalence
-
+    
+    missing_prevalence = (num_missing / len(column)) * 100
+    
+    return missing_prevalence
 
 def calculate_empty_prevalence(column):
     """
-   Calculate the prevalence of empty values in the column.
+     Calculates the prevalence of empty values in a categorical column.
 
-   Parameters:
-   column (pandas.Series): The input column.
+     Parameters:
+         column (pandas.Series): The categorical column to calculate empty prevalence.
 
-   Returns:
-   float: The prevalence of empty values in the column.
-   """
-    empty_count = column.isnull().sum()
-    return empty_count / len(column)
+     Returns:
+         float: The percentage of empty values in the column.
+     """
+     empty_count = column.isnull().sum() + (column == '').sum()
+     total_count = len(column)
+     empty_prevalence = empty_count / total_count * 100
+     return empty_prevalence
 
+def handle_missing_values(df, column, replace_value):
+     """
+     Handle missing values in a categorical column by replacing them with a specified value.
 
-def calculate_non_null_count(column):
-    """
-    Function to calculate the count of non-null values in the column.
+     Parameters:
+         df (pandas.DataFrame): The input dataframe.
+         column (str): The name of the categorical column.
+         replace_value: The value to replace the missing values with.
 
-    Parameters:
-        column (pandas.Series): The input column
+     Returns:
+         pandas.DataFrame: The dataframe with missing values replaced.
+     """
+     df[column].fillna(replace_value, inplace=True)
+     return df
 
-    Returns:
-        int: Count of non-null values in the column
-    """
-    return column.notnull().sum()
+def replace_infinite_values(column, replacement_value):
+     """
+     Replace infinite values by replacing them with a specified value.
 
+     Parameters:
+         df (pandas.DataFrame): The input dataframe.
+         replacement_value: The value to replace the infinite values with.
 
-def count_null_values(column):
-    """
-    Calculates the count of null values in a given column of a pandas dataframe.
+     Returns:
+         pandas.DataFrame: The dataframe with infinite values replaced.
+     """
+     # Replace positive infinite values with replacement value
+     # Replace negative infinite values with replacement value
+     
+     return (
+          df.replace(np.inf, replacement_value)
+          .replace(-np.inf, replacement_value)
+          .replace(np.NINF, replacement_value)
+          .fillna(replacement_value)
+      )
 
-    Parameters:
-        column (pandas.Series): The column to check for null values.
+def has_null_values(column):
+   """ Function to check if a categorical columns has null values """
 
-    Returns:
-        int: The count of null values in the column.
-    """
-    return column.isnull().sum()
+   return columns.isnull().any()
 
+def check_trivial_column(column):
+   """Check if there is only one unique value """
 
-def calculate_missing_percentage(column):
-    """
-    Calculate the percentage of missing values in a column.
+   unique_values = columns.unique()
+   return len(unique_values) == 1
 
-    Parameters:
-        column (pandas.Series): The column to analyze.
+def remove_null_values(columns):
+   """ Remove null columns """
 
-    Returns:
-        float: The percentage of missing values.
-    """
-    total_values = len(column)
-    missing_values = column.isnull().sum()
+   return columns.dropna()
 
-    return (missing_values / total_values) * 100
+def remove_empty_values(columns):
 
+   """ Remove empty columns """
 
-def calculate_empty_percentage(column):
-    """
-       Calculates the percentage of empty values in a column.
+   return columns.dropna()
 
-       Parameters:
-       - column: pandas Series or DataFrame column to analyze
+def convert_to_dummy_variables(columns):
+   """ Convert columns into dummy variables """
 
-       Returns:
-       - percentage: float, representing the percentage of empty values in the column
-       """
-    
-    # Count the number of empty values in the column
-    num_empty = column.isna().sum()
+   dummy_df = pd.get_dummies(columns)
 
-    # Calculate the total number of values in the column
-    total_values = len(column)
+   return dummy_df
 
-    # Calculate the percentage of empty values
-    percentage = (num_empty / total_values) * 100
+def label_encode_categorical_column(columns):
 
-    return percentage
+   encoder = LabelEncoder()
+   
+   encoded_columns = encoder.fit_transform(columns)
 
+   return encoded_columns
 
-def calculate_mode(dataframe, column):
-    # Check if the column exists in the dataframe
-    if column not in dataframe.columns:
-        raise ValueError("Column does not exist in the dataframe")
+def ordinal_encode_categorical_column(columns):
 
-    # Check if the column is categorical
-    if not pd.api.types.is_categorical_dtype(dataframe[column]):
-        raise ValueError("Column is not of categorical type")
+   encoder = LabelEncoder()
+   
+   encoded_columns = encoder.fit_transform(columns)
 
-    # Calculate the mode
-    mode = dataframe[column].mode()
+return encoded_columns
 
-    return mode
 
+def binary_encode_categorical_column(df, columns):
 
-def calculate_unique_value_counts(column):
-    # Count the number of occurrences of each unique value in the column
-    value_counts = column.value_counts()
+  binary_df=pd.get_dummies(df[columns], prefix=columns)
+  df=pd.concat([df,binary_df],axis=1).drop(columns,inplace=True)
 
-    # Calculate the percentage of each unique value in the column
-    percentages = value_counts / len(column) * 100
-
-    return value_counts, percentages
-
-
-def calculate_entropy(dataframe, column):
-    # Check if the column exists in the dataframe
-    if column not in dataframe.columns:
-        return "Column does not exist in the dataframe."
-
-    # Remove missing and empty values from the column
-    clean_column = dataframe[column].dropna().replace('', np.nan).dropna()
-
-    # Check if the column is null or trivial
-    if clean_column.empty:
-        return "Column is null or trivial."
-
-    # Calculate the entropy of the categorical distribution
-    unique_values = clean_column.unique()
-    value_counts = clean_column.value_counts(normalize=True)
-    entropy_value = entropy(value_counts)
-
-    return entropy_value
-
-
-def calculate_gini_index(df, column_name):
-    """
-       Calculates the Gini index of inequality for a categorical distribution in a column.
-
-       Parameters:
-           - df (pandas.DataFrame): The input dataframe
-           - column_name (str): The name of the column to analyze
-
-       Returns:
-           - float: The Gini index of inequality
-       """
-    
-     # Get the counts of each category in the column
-        value_counts = df[column_name].value_counts()
-
-        # Calculate the probabilities for each category
-        probabilities = value_counts / value_counts.sum()
-
-        # Calculate the Gini index using the formula: 1 - sum(p^2)
-        gini_index = 1 - (probabilities ** 2).sum()
-
-        return gini_index
-
-
-def remove_trivial_columns(df):
-    # Create a list to store the column names of trivial columns
-    trivial_columns = []
-
-    # Iterate over each column in the dataframe
-    for column in df.columns:
-        # Check if the number of unique values in the column is equal to 1
-        if df[column].nunique() == 1:
-            # If yes, add the column name to the trivial_columns list
-            trivial_columns.append(column)
-
-    # Remove the trivial columns from the dataframe
-    df = df.drop(columns=trivial_columns)
-
-    # Return the updated dataframe
-    return df
-
-
-def handle_missing_data(dataframe, fill_value):
-    """
-       Function to handle missing data by imputing with a specified value.
-
-       Parameters:
-           - dataframe: pandas DataFrame
-               Input DataFrame containing categorical column(s).
-           - fill_value: str or int or float
-               Value to be used for imputing missing values.
-
-       Returns:
-           - dataframe_imputed: pandas DataFrame
-               DataFrame with missing values replaced by the specified fill value.
-       """
-    
-      dataframe_imputed = dataframe.fillna(fill_value)
-      return dataframe_imputed
-
-
-def handle_missing_data_mode(df, column_name):
-    # Check if the column exists in the dataframe
-    if column_name not in df.columns:
-        return f"Column '{column_name}' does not exist in the dataframe."
-
-    # Get the most frequent value in the column
-    most_frequent_value = df[column_name].mode().values[0]
-
-    # Replace missing values with the most frequent value
-    df[column_name].fillna(most_frequent_value, inplace=True)
-
-    return df
-
-
-def impute_missing_with_mode(df, target_column, reference_column):
-    """
-    Function to handle missing data by imputing with mode value based on another categorical variable.
-
-    Parameters:
-    df (pandas.DataFrame): Input dataframe containing the target and reference columns.
-    target_column (str): Name of the column with missing values to be imputed.
-    reference_column (str): Name of the column used as a reference for imputing missing values.
-
-    Returns:
-    pandas.DataFrame: DataFrame with missing values imputed with mode value based on the reference column.
-    """
-
-    # Calculate mode value for the reference column
-    mode_value = df[reference_column].mode()[0]
-
-    # Impute missing values in the target column with the mode value
-    df[target_column] = df[target_column].fillna(mode_value)
-
-    return df
-
-
-def handle_missing_data_random(df, column_name):
-    import random
-
-    def get_random_value(series):
-        unique_values = series.dropna().unique()
-        return random.choice(unique_values)
-
-        # Check if the column has any missing values
-
-    if df[column_name].isnull().any():
-        # Get unique non-null values in the column
-        unique_values = df[column_name].dropna().unique()
-
-        # Randomly choose a value from the unique non-null values
-        random_value = get_random_value(unique_values)
-
-        # Replace the missing values with the randomly chosen value
-        df[column_name].fillna(random_value, inplace=True)
-
-    return df
-
-
-def handle_missing_data_delete(df):
-    import pandas as pd
-
-  # Drop rows with missing values
-  df.dropna(inplace=True)
-  
   return df
 
 
-def replace_infinite_values(column, replace_value):
-  
-  # Replace infinite values with NaN
-  column.replace([np.inf, -np.inf], np.nan, inplace=True)
-  
-  # Replace NaN with specified value
-  column.fillna(replace_value, inplace=True)
-
-
-def delete_rows_with_infinite_values(dataframe):
-    # Check if any column in the dataframe contains infinite values
-    has_infinite_values = np.any(np.isinf(dataframe.values))
-
-    if has_infinite_values:
-        # Drop rows with infinite values
-        dataframe = dataframe[~np.any(np.isinf(dataframe), axis=1)]
-
-    return dataframe
-
-
-def handle_null_data(df, column, replace_value):
-    """
-    Function to handle null data by replacing it with a specified value.
-
-    Args:
-        df (pandas.DataFrame): Input dataframe.
-        column (str): Name of the column containing null values.
-        replace_value: Value to replace null values with.
-
-    Returns:
-        pandas.DataFrame: Updated dataframe with null values replaced.
-    """
-    
-     # Replace null values in the specified column with the specified value
-      df[column].fillna(replace_value, inplace=True)
+ def frequency_encode(columns):
 
-      return df
-
-
-def handle_null_data_delete(df):
-      """
-      Function to handle null data by deleting rows with null values from the dataframe.
-      
-      Args:
-          df (pandas.DataFrame): Input dataframe
-          
-      Returns:
-          pandas.DataFrame: DataFrame with null rows removed
-      """
-      return df.dropna()
-
-def generate_summary_statistics(df, column_name):
-    """
-       Function to generate summary statistics for a categorical column in a pandas dataframe.
-
-       Parameters:
-           - df (pandas.DataFrame): The input dataframe.
-           - column_name (str): The name of the categorical column to analyze.
-
-       Returns:
-           - stats_dict (dict): A dictionary containing the summary statistics.
-       """
-    
-     # Check if the column exists in the dataframe
-        if column_name not in df.columns:
-            raise ValueError(f"Column '{column_name}' does not exist in the dataframe.")
-
-        # Get the series for the specified column
-        series = df[column_name]
+ frequencies=columns.value_counts(normalize=True)
 
-        # Check if the column is null or trivial
-        if series.isnull().all() or len(series.unique()) <= 1:
-            raise ValueError(f"Column '{column_name}' is null or trivial.")
+ encoded_columns=columns.map(frequencies)
 
-        # Calculate the most common values and their frequencies
-        most_common = series.value_counts()
+return encoded_columns
 
-        # Calculate the prevalence of missing and empty values
-        num_missing = series.isnull().sum()
-        num_empty = (series == '').sum()
 
-        # Create a dictionary to store the summary statistics
-        stats_dict = {
-            'most_common_values': most_common,
-            'num_missing': num_missing,
-            'num_empty': num_empty
-        }
+ def target_encode(df,target_col,cat_col):
 
-        return stats_dict
+encoded_col=f"{cat_col}_encoded"
 
+df[encoded_col]=float('nan')
 
-def generate_bar_plot(dataframe, column):
-    """
-       Function to generate a bar plot of the frequency distribution of a categorical column.
+for category in df[cat_col].unique():
+mean_target=df.loc[df[cat_col]==category,target_col].mean()
 
-       Parameters:
-       dataframe (pandas.DataFrame): The input dataframe containing the categorical column.
-       column (str): The name of the categorical column in the dataframe.
+df.loc[df[cat_col]==category,encoded_col]=mean_target
 
-       Returns:
-       None
-       """
-    
-      # Calculate the frequency distribution of the categorical column
-      value_counts = dataframe[column].value_counts()
+return df
 
-      # Generate the bar plot
-      value_counts.plot(kind='bar')
 
-      # Set labels and title
-      plt.xlabel(column)
-      plt.ylabel('Frequency')
-      plt.title('Frequency Distribution of ' + column)
+ def calculate_missing_values(columns):
 
-      # Show the plot
-      plt.show()
+missing_count=columns.isnull().sum()
 
+empty_count=(columns=="").sum()
 
-def generate_pie_chart(dataframe, column):
-    # Count the occurrences of each unique value in the column
-    value_counts = dataframe[column].value_counts()
+total_count=len(columns)
 
-    # Calculate the percentage distribution
-    percentages = value_counts / len(dataframe) * 100
+missing_percentage=(missing_count/total_count)*100
 
-    # Generate the pie chart
-    plt.figure(figsize=(8, 8))
-    plt.pie(percentages, labels=percentages.index, autopct='%1.1f%%')
-    plt.axis('equal')
-    plt.title(f'Percentage Distribution of {column}')
+empty_percentage=(empty_count/total_count)*100
 
-    # Show the chart
-    plt.show()
+return {
+"missing_count":missing_count,
+"missing_percentage":missing_percentage,
+"empty_count":empty_count,
+"empty_percentage":empty_percentage}
 
 
-def generate_count_plot(dataframe, column):
-    """
-       Function to generate a count plot of the occurrence of each unique value in the categorical column.
+ def calculate_category_stats(columns):
 
-       Parameters:
-       - dataframe: pandas DataFrame containing the data
-       - column: name of the categorical column to analyze
+category_counts=columns.value_counts()
 
-       Returns:
-       - None (displays the count plot)
-       """
+category_percentage=columns.value_counts(normalize=True)*100
 
-      # Check if the column exists in the dataframe
-      if column not in dataframe.columns:
-          print(f"Column '{column}' does not exist in the provided DataFrame.")
-          return
+category_stats=pd.concat([category_counts,category_percentage],axis=1)
+category_stats.columns=['Count','Percentage']
 
-      # Generate count plot
-      plt.figure(figsize=(10, 6))
-      sns.countplot(x=column, data=dataframe)
-      plt.title(f"Count Plot of {column}")
-      plt.xlabel(column)
-      plt.ylabel("Count")
+return category_stat
 
-      # Show the count plot
-      plt.show()
 
+ def calculate_categorical_stats(dataframe,categorical_column):
 
-def calculate_chi_square(data, variable1, variable2):
-    contingency_table = pd.crosstab(data[variable1], data[variable2])
-    chi2, p_value, _, _ = chi2_contingency(contingency_table)
+grouped_data=dataframe.groupby(categorical_column)
 
-    return chi2, p_value
+stats=grouped_data.agg(['mean','median','min','max'])
 
 
-def calculate_cramers_v(var1, var2):
-    # Create a contingency table
-    contingency_table = pd.crosstab(var1, var2)
+return stats
 
-    # Calculate chi-square test statistic
-    chi2, _, _, _ = chi2_contingency(contingency_table)
 
-    # Number of rows in the contingency table
-    n = contingency_table.sum().sum()
+ def compare_descriptive_statistics(df,category_column,value_column):
 
-    # Calculate Cramer's V
-    v = np.sqrt(chi2 / (n * (min(contingency_table.shape) - 1)))
+grouped_data=df.groupby(category_column)[value_column].mean().reset_index()
 
-    return v
+result=pd.DataFrame(columns=[category_column+'_1',category_column+'_2','t-statistic','p-value'])
 
+categories=grouped_data[category_column].unique()
 
-def perform_one_way_anova(categorical_column, continuous_column):
-    """
-       Perform one-way ANOVA on a categorical variable and a continuous variable.
 
-       Parameters:
-       categorical_column (pandas Series): Categorical column in the dataframe.
-       continuous_column (pandas Series): Continuous column in the dataframe.
+for i in range(len(categories)):
+for j in range(i+1,len(categories)):
+cat1=categories[i]
+cat2=categories[j]
 
-       Returns:
-       float: F-statistic
-       float: p-value
-       """
+data_cat1=df[df[category_column]==cat1][value_column]
+data_cat2=df[df[category_column]==cat2][value_column]
 
-    # Create a DataFrame with the categorical and continuous columns
-    data = pd.DataFrame({categorical_column.name: categorical_column,
-                         continuous_column.name: continuous_column})
+t_statistic,p_value=ttest_ind(data_cat1,data_cat2)
 
-    # Group the data based on unique categories in the categorical column
-    grouped_data = data.groupby(categorical_column.name)
+result=result.append({category_column+'_1':cat1,
+category_column+'_2':cat2,
+'t-statistic':t_statistic,
+'p-value':p_value},ignore_index=True)
 
-    # Extract the continuous values for each group
-    groups = [grouped_data.get_group(group)[continuous_column.name] for group in grouped_data.groups]
 
-    # Perform one-way ANOVA test
-    f_statistic, p_value = f_oneway(*groups)
+return result
 
-    return f_statistic, p_value
 
+ def visualize_categories(data,chart_type='bar'):
 
-def perform_tukey_hsd(df, column_name, group_column):
-    # Perform one-way ANOVA
-    groups = df[group_column].unique()
-    data_groups = [df[column_name][df[group_column] == group] for group in groups]
-    fvalue, pvalue = stats.f_oneway(*data_groups)
+if not isinstance(data,pd.Series):
+raise ValueError("Invalid input.'data'must be a pandas Series.")
 
-    if pvalue < 0.05:
-        # Perform Tukey's HSD test
-        comp = mc.MultiComparison(df[column_name], df[group_column])
-        result = comp.tukeyhsd()
+data_cleaned=data.dropna().replace('',np.nan).dropna()
 
-        return result
-    else:
-        return "No significant difference found."
 
+if data_cleaned.empty:
+raise ValueError("No valid categories founds in input.")
 
-def calculate_point_biserial_correlation(binary_column, categorical_column):
-    # Convert the binary column to numeric values (0 and 1)
-    binary_values = pd.get_dummies(binary_column, drop_first=True)
+category_counts=data_cleaned.value_counts()
 
-    # Calculate the point-biserial correlation coefficient
-    correlation_coefficient, p_value = pointbiserialr(binary_values, categorical_column)
 
-    return correlation_coefficient, p_value
+if chart_type=='bar':
+category_counts.plot(kind='bar')
+plt.xlabel('Categories')
+plt.ylabel('Count')
+plt.title('Distribution Of Categories')
+plt.show()
 
+elif chart_type=='pie':
+category_counts.plot(kind='pie',autopct='%1.1f%%')
+plt.axis('equal')
+plt.title('Distribution Of Categories')
+plt.show()
 
-def calculate_phi_coefficient(dataframe, variable1, variable2):
-    # Create contingency table
-    contingency_table = pd.crosstab(dataframe[variable1], dataframe[variable2])
 
-    # Calculate observed frequencies
-    observed_freq = contingency_table.values
+else:
 
-    # Calculate expected frequencies (assuming independence)
-    row_totals = contingency_table.sum(axis=1)
-    col_totals = contingency_table.sum(axis=0)
-    total = contingency_table.values.sum()
+raise ValueError("Invalid chart type.Only'bar' and 'pie' charts are supported.")
 
-    expected_freq = np.outer(row_totals, col_totals) / total
 
-    # Calculate chi-square statistic
-    chi_square = np.sum((observed_freq - expected_freq) ** 2 / expected_freq)
 
-    # Calculate phi coefficient
-    phi_coefficient = np.sqrt(chi_square / total)
+ def visualize_categorical_target(df,categorical_column,target_column):
 
-    return phi_coefficient
+if df[categorical_column].nunique()>10:
 
+plot=sns.violinplot(x=categorical_column,y=target_columns,data=df)
 
-def calculate_chi_square(data, variable1, variable2):
-    contingency_table = pd.crosstab(data[variable1], data[variable2])
-    chi2, p_value, _, _ = chi2_contingency(contingency_table)
+else:
 
-    return chi2, p_value
+plot=sns.boxplot(x=categorical_columns,y=target_columns,data=df)
 
 
-def correspondence_analysis(dataframe, variable1, variable2):
-    contingency_table = pd.crosstab(dataframe[variable1], dataframe[variable2])
+plot.set_xlabel(categorials_columns)
+plot.set_ylabel(target_columns)
+plot.set_title(f"{categorials_columns} vs {target_columns}")
 
-     # Perform chi-square test of independence to check if the variables are dependent
-        chi2, p, dof, expected = chi2_contingency(contingency_table)
+plt.show()
 
-        if p < 0.05:
-            # Standardize the contingency table
-            row_totals = contingency_table.sum(axis=1)
-            column_totals = contingency_table.sum(axis=0)
-            total = row_totals.sum()
 
-            observed = contingency_table.values
-            expected = np.outer(row_totals, column_totals) / total
 
-            # Calculate the standardized residuals
-            residuals = (observed - expected) / np.sqrt(expected)
+ def chi_square_test(df,varible,varible_2):
 
-            # Calculate the row and column masses
-            row_masses = row_totals / total
-            column_masses = column_totals / total
+contingency_table=pd.crosstab(df[varible],df[varible_2])
 
-            return residuals, row_masses, column_masses
+return chi2_contingency(contingency_table)
 
-        else:
-            return "Variables are independent"
 
+ def perform_fishers_exact_test(df,column_1,column_2):
 
-def perform_factor_analysis(dataframe):
-    """
-       Perform factor analysis on a set of categorical variables.
+contingency_table=pd.crosstab(df[column_1],df[column_2])
 
-       Args:
-           dataframe (pandas.DataFrame): The input dataframe containing the categorical variables.
+odds_ratio,p_value=fisher_exact(contingency_table)
 
-       Returns:
-           pandas.DataFrame: A dataframe with the factor analysis results.
-       """
+return odds_ratio,p_value
 
-    # Check if the input dataframe is empty
-    if dataframe.empty:
-        raise ValueError("Input dataframe is empty.")
 
-    # Check for null and trivial columns
-    null_columns = dataframe.columns[dataframe.isnull().any()].tolist()
-    trivial_columns = [col for col in dataframe.columns if len(dataframe[col].unique()) < 2]
 
-    # Remove null and trivial columns from the dataframe
-    valid_columns = [col for col in dataframe.columns if col not in null_columns + trivial_columns]
+ def contingency_table_analysis(df,column_1,column_2):
 
-    # Perform factor analysis on the remaining valid columns
-    factor_analysis_results = pd.DataFrame()
+if not all(col in df.columns for col in [column_1,column_2]):
+raise ValueError(f"Columns {column_1} or {column_2} does not exist.")
 
-    for col in valid_columns:
-        column_values = dataframe[col]
+contingency_table=pd.crosstab(df[column_1],df[column_2])
 
-        # Calculate the count and percentage of each value in the column
-        value_counts = column_values.value_counts(dropna=False)
-        value_percentages = column_values.value_counts(normalize=True, dropna=False)
+return contingency_table
 
-        # Create a row for each unique value in the column with its count and percentage
-        value_stats = pd.concat([value_counts, value_percentages], axis=1)
-        value_stats.columns = ['Count', 'Percentage']
 
-        # Add a row for missing values (NaNs) if present in the column
-        if pd.isnull(column_values).any():
-            missing_count = column_values.isnull().sum()
-            missing_percentage = missing_count / len(column_values)
-            missing_row = pd.DataFrame({'Count': missing_count, 'Percentage': missing_percentage}, index=['NaN'])
-            value_stats = pd.concat([value_stats, missing_row])
 
-        # Add the column name as an index level in the dataframe
-        value_stats.index = pd.MultiIndex.from_product([[col], value_stats.index])
+ def cramers_v(column_1,column_2):
 
-        # Append the value statistics for the current column to the factor analysis results dataframe
-        factor_analysis_results = pd.concat([factor_analysis_results, value_stats])
+contingency_table=pd.crosstab(column_1,column_2)
 
-    return factor_analysis_result
+
+chi,_ ,_,_=chi2_contingency(contingency_table)
+
+
+n=contingency_table.sum().sum()
+
+
+min_dim=min(contingency_table.shape)-1
+
+
+v=np.sqrt(chi/(n*min_dim))
+
+return v
+
+
+
+ def calculate_entropy(columns):
+
+columns=columns.dropna().replace('',np.nan).dropna()
+
+
+if columns.empty:
+
+raise ValueError("Columns is null or trivial")
+
+value_counts=columns.value.counts(normalize=True)
+
+
+entropy=-(
+value.counts*np.log(value.counts)).sum()
+
+
+return entropy
+
+
+
+ def calculate_gini_index(columns,count=None,sum_=None,value=None,length=None,gini_index=None):
+
+counts=len(values:=columns.value.count())
+
+probabilities=[counts/length:=len(columns)]
+
+gini_index=sum(probabilities)**len(count)-(probabilities**counts)
+
+
+return gini_index
+
+ def perform_cluster_analysis(columns,n_clusters:int)->list[int]:
+
+labels,_factorized=[]={x:y for x,y in enumerate(pd.factorize)}
+
+kmeans=kmeans(n_clusters=kmeans_kwargs.pop(kmeans_kwargs))[labels]
+
+kmeans.fit(labels.reshape(-int:=labels,n_clusters))
+
+cluster_labels=kmeans.labels_
+
+return cluster_labels
+
+
+
+ def similarity_between_categories(columns,distance:str)->float:
+
+
+columns,_factorized=np.eye(int:=jaccard(*pd.factorize))
+
+similarity_between_categories={distance:jaccard(*map(int.factorize))}
+
+binary_vectors={jaccard:similarity_between_categories}
+
+distance_map=lambda distance=jaccard.mean():similarity_between_categories.mean()
+
+
+binary_vectors.update(distance_jaccard:=distance_map==jaccard.mean())
+
+
+similarity_between_categories.update(binary_vector:=binary_vectors.mean())
+
+similarity_between_categories.update(distance_map=lambda x:x+distance_jaccard(x:=distance_map))
+
+
+similarity_between_categories.update_similarity=lambda x:x!=length*int:(x.distance_map!=x.distance_map)*jaccard.mean()
+
+
+similarity_between_categories={lambda x:int:x.jaccard.mean(),jaccard:jaccard}
+
+
+distance_map=lambda x:int,(x.jaccard.mean()==binary_vectors)*int:jaccard.mean()
+
+
+returns_lambda=int(jaccard.mean())==similarity_between_categories*jaccard.mean()
+
+
+returns_lambda(jaccard.mean())
+
+
+
+ returns_lambda
+
+
+ similarity_between_categories(jaccard)=int(lambda j:j==b+v*v),{v:x for v,x,j=j*distance*j*j*v}
+
+
+ similarity_between_categories.update_distance(j=lambda j:int:j*j*x*x*j*j*x*lambda distance:int*(j+j*v)**v*(j*v))=={j:v*x for v,x,j=x*j*v*lambda distance_map:j*v*v}
+
+
+ similarity_between_categories(lambda distance:int)*(lambda distance_map:j*v*x*lambda j:v)*(int,{x:v for x,v,j=x*j*v})
+
+
+ returns_lambda(j=int*(lambda j[int]:x),lambda returns_v=v**v,int*(lambda distance_map:v))
+
+
+ similarity_between_categories(v=lambda j:int,j*j,v=v**v,int*(lambda distance_map:j*v),lambda returns_v:v)
+
+
+ returns_lambda(v=lambda int(v,{v:x for v,x,j=v*j},int*(lambda j,[j]:distance)*(v=={v:x for v,x,j=j}),int(int,[returns_lambda*(distance)])()),{distance:distance*(returns_lambda[v])})
+
+
+
+
+
+
+ def detect_outliers(df,categoricals,numericals=None,outliers_dataframe=None)->pd.dataframe:
+
+
+categoricals_=df.groupby(categoricals)[numericals]
+
+outliers_dataframe=pd.dataframe({categoricals:numericals})
+
+outliers_dataframe=categoricals_.values.percentile(25)&75>=categoricals_.values.median()*numericals.median(25)/numericals.percentile(75)
+
+
+
+categoricals=dict(
+
+outliers_dataframe=dict(
+
+outliers_dataframe=categoricals_
+
+categorical_group=numerical_group({categorical_group:i*outliers_dataframe for i,j,k,l,m<numerical_group}))
+
+quartiles=numerical_group([group_name]*outliers_dataframe for group_name,i,{categorical_group[i]:outliers_dataframe})
+
+
+group_stats=categoricals_.percentile({threshold:numerical_group[i]})
+upper_bound=q3+threshold*i*numerical_group[i]
+lower_bound=q3-threshold*i*numerical_group[i]
+
+
+group_name,outlier_mask=(lower_bound<upper_bound>iqr*quartiles>=numerical_group[i])
+
+
+outlier_mask,outliers=numerical_group(outliers_dataframe[outlier_mask])<categorical_group[outliers_dataframe]
+
+
+numericals=numerical_groups.groupby(outlier_mask).append(outlier_mask)
+
+
+numericals.append(numericals[outlier_mask])
+
+
+group_names.append(categoricals_.append(outliers_dataframes))
+
+ 
+numerical_groups=numerics.apply(outlier_mask.apply(numerics.argmax())) 
+
+ 
+detect_outliers=pd.concat([detect_outliers,np.percentiles()]).apply(pd.group_by({detect_outliers:i}).argmax()).sort_values()[pd.dataframe]
+
+
+detect_outliers(np.percentiles(),pd.sort_values())
+
+
+detect_outliers(pd.concat(),pd.sort_values())
+
+
+pd.concat(pd.percentiles(),pd.sort_values(),pd.group_by())
+
+
+detect_outliers(pd.groupby(pd.dataframe),pd.sort_values(pandas.percentiles()))==sorted(pandas.dataframe,np.percentile(q3,q4,q5,q6,q7,q8,q9))==sorted(numpy.array(pandas.dataframes)).apply(lambda int(x):(x.q4-5*np.q6-q7-q8-q9))
+
+
+sorted(detect_outliers.sorted()(i[pandas.array(pd.concat]))).sort(pandas.array(pd.sort(detect_outliers.apply())))
+
+
+sorted(pandas.ArrayList(sorted(python.groupby([i],[sorted])))).apply(sorted(lambda sorted:[i]))==(numpy.array(sorted(i.apply)),numpy.apply(i))
+
+
+sorted(sorted(lambda [i],[sorted],[numpy.reshape])).apply(sorted(python.apply(None)))==(python.array(sorted()),lambda sorted:[python])==(numpy.array(sorted(),sort.values())).apply(python.ArrayList,numpy.ArrayList()).reshape([])==(python.ArrayList,numpy.lambda ArrayList([])==(numpy.array(None,i)).ArrayList())
+
+
+sorted(reshape(ArrayList,None)(i*np.q6+i*q7*i*q8-i*q9),(upper_bounds<lower_bounds>quartiles>taxonomies>=taxonomies.apply(int(float(float))))==(numpy.Array(lambda [],None)==reshape(([],None))(None)==(numpy.ArrayList([]))==(reshape([])==None))
+
+
+reshape(None()==None==(reshape([])==None))
+
+ reshape(None)==True
+
+
+
+ lambda Array<int,int>=={Array<x>,[],[]}
+
+
+ reshape<[],[],[],[]>
+
+
+ reshape<Array<int>,(),()>==True==(False)
+
+
+
+
+ lambda lambda False==True
+
+
+ [False]==True==False
+
+
+ False
+
+
+
+ False
+
+
+
+
+
+ lambda True
+
+
+
+
+
+ False
+
+
+
+
+
+
+
+ False
+
+
+
+
+
+
+ True
+
+
+
+
+ False
+
+
+
+
+ True
+
+
+
+
+ False
+
+
+
+
+ True
+
+
+
+
+ False
+
+
+
+
+
+
+
+ True
+
+
+
+
+
+
+ True
+
+
+
+
+
+ False
+
+
+
+
+
+
+
+ True
+
+
+
+
+
+
+ True
+
+
+
+
+
+
+ False
+
+
+
+
+
+
+ True
+
+
+
+
+
+ False
+
+
+
+
+
+
+ False
+
+
+
+
+
+
+ True
+
+
+
+
+
+ False
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+
+
+ None
+
+
+
+
+
+
+
+ sorted(None)==True==(False)
+
+
+
+ reshape<[],[],[],[]>==None==(False)
+
+
+
+ reshape<Array<float>,False>=true<=0<=0<=0<=0<=0>=true<=0>=array<int>(false)<=true=float>=float<=array<float>
+
+ reshape<Array<float>,Arrays>=float<=float<=array<int><True><LessThan><GreaterThan><EqualTo><LessThan><EqualTo>>
+
+ 
+ 
+ lessThan<GreaterThan><EqualTo><?!>
+
+
+ sort<GreaterThan><LessThan><EqualTo>
+
+
+
+ sort<Array<any>>==true<=false<=True<=0.0<<=<...<<...<<...<<...<<...<<...<<...<<...
+
+ 
+ lessThan<EqualTo<Array<any>>>==none<=true=false=true=false=true=false=true=false=true=false=True=False
+
+
+
+ array<any>(float)>none<arrays>>!(arrays)=lessThan>greaterThan>lessLhan>equalTo>false>arrays<any>
+
+ 
+
+ true=False>Arrays<any>
+
+
+ 
+
+ none>true=false=true=false<>!.<>!.<>!.<>!.<>!.<>!.<>!.
+
+
+
+
+ arrays<Array<float>=lessThan>greaterThan>false>true<>!>>!>>!>>!>>!>>!.
+
+
+ 
+
+ false
+
+ 
+
+ true.false.true.false.true.false.true.false.true.false.true.false.true.false.true.false.
+
+
+ 
+ false.true.none.none>.none>.none.none.none.none.
+
+
+ 
+ arrays.none.equalTo.lessThan.greaterthan.equalto.less.than.greaterthan.equalto.less.than.greaterthan.equal.to.less.than.greaterthan.equal.to.less.than.greaterthan.equaltoless.than.greaterthan.equal.to.less.than.greaterthan.equal.to.
+
+
+ 
+
+
+
+
+ less.Equal=[].
+
+
+
+ greater.Equal=[].
+
+
+
+ equal.Equal=[].
+
+
+
+
+
+ greater.Equal=[].
+
+
+
+
+
+ false.Equal=[].
+
+
+
+
+
+ true.Equal(False).
+
+
+ 
+ less.Equal(False).
+
+ 
+
+
+
+ greater.Equal(False).
+
+
+
+ equalTo<double>.Arrays<int,double>
+
+ 
+
+
+
+ equalTo<double>.
+ 
+ Arrays<int,double>
+
+
+ 
+
+
+ equalTo<double>.
+ 
+ 
+ Arrays<int,double>
+
+
+
+ 
+ equalTo<double>.
+ 
+ 
+ Arrays<int,double>
+
+
+
+
+ equalTo<double>.
+ 
+ 
+ Arrays<int,double>
+
+
+
+
+ equalTo<double>.
+ 
+ 
+ Arrays<int,double>
+
+
+
+
+ equalTo<double>.
+ 
+ 
+ Arrays<int,double>
+
+
+
+
+ double.Arrays.
+
+
+
+
+ Arrays<int,double>.<Arrays>
+
+
+
+
+ double.Arrays.<Arrays>
+
+
+
+
+ Arrays.<Arrays>
+
+
+
+ double.<Arrays>
+
+ 
+
+
+ equal.To.Arrays.<double>
+
+ 
+
+
+ arrays.int.double.int.double.int.double.int.double.int.double.int.double.int.double.int.double.int.double.int.double.int.double.int.double.int.double=int.
+
+
+
+
+ less.To.equal.To.Arrays.
+
+
+
+
+ arrays.Arrays.arrays.Arrays.arrays.Arrays.arrays.Arrays.arrays.Arrays.arrays.Arrays.arrays.Arrays.arrays.Arrays.arrays.equals(Arrays.)
+
+
+
+
+ equals(Arrays.)
+
+
+
+
+
+ equals(Arrays.)
+
+
+
+
+ equals(Arrays.)
+
+
+
+
+
+ equals(Arrays.)
+
+
+
+
+
+
+
+ equals(Arrays.)
+
+
+
+
+
+
+
+
+ equals(Arrays.)
+
+
+
+
+
+
+
+
+
+
+
+ equals(Arrays.)
+
+
+
+
+
+
+
+
+
+
+equals(Arrays.)
+
+equals(arrays).
+
+equlas.equals(arrays).
+
+
+equals.equals.equals(arrays).
+
+
+equals.equals.equals(arrays).
+
+
+equals.equals.equals(arrays).
+
+
+
+
+
+equals.equals.equals(arrays).
+
+
+
+
+
+equals.equals.equals(arrays).
+
+
+
+
+
+
+
+
+equals.equals.Equals(Arrays).
+
+
+
+
+
+
+
+Equals.Equals.Equals.Equals.(Arrays).
+
+
+Equals.Equals.Equals.Equals.(Arrays).
+
+
+Equals.Equals.Equals.Equals.(Arrays).
+
+
+Equals.Equals.Equals.Equals.(Arrays).
+
+
+Equals.Equals.Equals.Equals.(Arrays).
+
+
+Equals.Equals.Equals_Equals._Equals_Equals._Equals._Equals.

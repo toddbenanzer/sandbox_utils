@@ -1,103 +1,68 @@
-# String Processing Package Documentation
-
-This package provides a collection of functions for processing and manipulating strings in Python. It includes various utility functions that can be used to sanitize, tokenize, standardize, and extract information from strings.
-
-## Table of Contents
-- [Installation](#installation)
-- [Overview](#overview)
-- [Usage](#usage)
-- [Examples](#examples)
-
-## Installation
-
-To install the package, you can use pip:
-
-```bash
-pip install string_processing_package
-```
+```markdown
+# Python Text Manipulation Package
 
 ## Overview
-
-The string processing package is designed to simplify common tasks related to string manipulation and analysis. It offers a comprehensive set of functions that can be used to clean, transform, and extract information from text data.
-
-The main features of the package include:
-- Removing special characters, digits, punctuation, and whitespaces from a string.
-- Converting a string to lowercase.
-- Removing stopwords (common words that do not carry much meaning).
-- Splitting a string into individual words.
-- Joining a list of words into a single string.
-- Replacing specific words or patterns in a string.
-- Sanitizing a string by removing non-alphanumeric characters.
-- Tokenizing a string based on user-defined delimiters.
-- Standardizing the format of a string (e.g., uppercase, lowercase, capitalized).
-- Extracting email addresses and URLs from a string.
-- Lemmatizing words in a string (reducing them to their base or dictionary form).
-- Counting word frequency in a string.
-- Concatenating multiple strings with an optional separator.
+This Python package provides a collection of functions for text manipulation. It includes functionalities such as removing special characters, converting case, extracting email addresses and URLs, calculating string similarity scores, and more.
 
 ## Usage
-
-To use the package, you need to import it into your Python script or interactive session:
-
-```python
-import string_processing_package as spp
-```
-
-Once imported, you can call any of the available functions using the `spp` namespace followed by the function name. For example:
+To utilize this package, you can simply import the functions you need into your Python script. Here's an example:
 
 ```python
-cleaned_string = spp.remove_special_characters("Hello, world!")
-```
+from text_manipulation import remove_special_characters
 
-Some functions may require additional dependencies, such as the Natural Language Toolkit (NLTK) library. Please make sure to install any required dependencies before using those functions.
+string = "Hello! This is a test string."
+clean_string = remove_special_characters(string)
+print(clean_string)  # Output: "Hello This is a test string"
+```
 
 ## Examples
+Here are some examples of the main functionalities provided by this package:
 
-Here are some examples of how to use the string processing package:
-
-1. Cleaning and sanitizing a string:
+### Removing special characters
 ```python
-import string_processing_package as spp
+from text_manipulation import remove_special_characters
 
-dirty_string = "   Hello! This is a sample string with special characters and whitespaces.   "
-clean_string = spp.remove_special_characters(dirty_string)
-sanitized_string = spp.sanitize_string(clean_string)
-
-print(sanitized_string)  # Output: hello this is a sample string with special characters and whitespaces
+string = "Hello! This is a test string."
+clean_string = remove_special_characters(string)
+print(clean_string)  # Output: "Hello This is a test string"
 ```
 
-2. Tokenizing a string:
+### Converting to lowercase
 ```python
-import string_processing_package as spp
+from text_manipulation import convert_to_lowercase
 
-text = "This is a sample sentence."
-tokens = spp.tokenize_string(text, delimiters=" ")
-
-print(tokens)  # Output: ['This', 'is', 'a', 'sample', 'sentence.']
+string = "Hello! This is a test string."
+lowercase_string = convert_to_lowercase(string)
+print(lowercase_string)  # Output: "hello! this is a test string."
 ```
 
-3. Replacing words in a string:
+### Removing whitespaces
 ```python
-import string_processing_package as spp
+from text_manipulation import remove_whitespaces
 
-text = "I love cats and dogs."
-replacements = {
-    "cats": "dogs",
-    "dogs": "cats"
-}
-replaced_text = spp.replace_words(text, replacements)
-
-print(replaced_text)  # Output: I love dogs and cats.
+string = "   Hello!   "
+trimmed_string = remove_whitespaces(string)
+print(trimmed_string)  # Output: "Hello!"
 ```
 
-4. Lemmatizing words in a string:
+### Extracting email addresses
 ```python
-import string_processing_package as spp
+from text_manipulation import extract_emails
 
-text = "I am running in the park."
-lemmatized_text = spp.lemmatize_string(text)
-
-print(lemmatized_text)  # Output: I am running in the park.
+text = "Please contact us at info@example.com for more information."
+emails = extract_emails(text)
+print(emails)  # Output: ["info@example.com"]
 ```
 
-These are just a few examples of what you can do with the string processing package. Please refer to the function documentation for more details on each function's parameters and return values.
+### Calculating string similarity using cosine similarity
+```python
+from text_manipulation import calculate_cosine_similarity
+
+string1 = "Hello, how are you?"
+string2 = "Hi, how are you doing?"
+similarity_score = calculate_cosine_similarity(string1, string2)
+print(similarity_score)  # Output: 0.89
+```
+
+These examples showcase some of the key functionalities provided by this package. For a full list of available functions and their usage, please refer to the function definitions in the code.
+```

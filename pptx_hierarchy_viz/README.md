@@ -1,106 +1,85 @@
-# Overview
+## Overview
 
-This python script is designed to create a PowerPoint presentation using the Python `python-pptx` package. It provides a convenient way to programmatically generate professional presentations with custom content and formatting.
+This python script provides a set of functions for creating and manipulating PowerPoint presentations using the `pptx` library. It includes functionality for creating blank slides, adding text, images, charts, tables, shapes, hyperlinks, and more. The script also includes functions for setting font styles and sizes, slide background colors, text alignments, border styles, and saving/opening presentations. Additionally, there are functions for creating tree visualizations, organizational charts, hierarchical visualizations, and exporting slides as images or csv files.
 
-# Usage
+## Usage
 
-To use this script, you will need to have the Python `python-pptx` package installed. You can install it using `pip` with the following command:
+To use this script, you will need to have the `pptx` and `pandas` libraries installed. You can install them using pip:
 
-```bash
-pip install python-pptx
+```
+pip install python-pptx pandas
 ```
 
-Once you have installed the package, you can run the script by executing the command:
-
-```bash
-python create_presentation.py
-```
-
-The script will generate a PowerPoint presentation with predefined slides and content. You can customize the content and formatting of the slides by modifying the script accordingly.
-
-# Examples
-
-Here are some examples of how to use this script:
-
-## Example 1: Creating a basic presentation
+Once you have the required dependencies installed, you can import the script into your Python project using:
 
 ```python
-from pptx import Presentation
-
-# Create a new presentation object
-presentation = Presentation()
-
-# Add a title slide to the presentation
-title_slide_layout = presentation.slide_layouts[0]
-slide = presentation.slides.add_slide(title_slide_layout)
-title = slide.shapes.title
-subtitle = slide.placeholders[1]
-title.text = "My Presentation"
-subtitle.text = "Created with python-pptx"
-
-# Save the presentation to a file
-presentation.save("path/to/new_presentation.pptx")
+from pptx_functions import *
 ```
 
-This example demonstrates how to create a basic PowerPoint presentation with a title slide.
-
-## Example 2: Adding content to slides
+Then you can use any of the provided functions by calling them with the required arguments. For example:
 
 ```python
-from pptx import Presentation
-
-# Create a new presentation object
-presentation = Presentation()
-
-# Add a title slide to the presentation
-title_slide_layout = presentation.slide_layouts[0]
-slide = presentation.slides.add_slide(title_slide_layout)
-title = slide.shapes.title
-subtitle = slide.placeholders[1]
-title.text = "My Presentation"
-subtitle.text = "Created with python-pptx"
-
-# Add a content slide with bullet points
-content_slide_layout = presentation.slide_layouts[1]
-slide = presentation.slides.add_slide(content_slide_layout)
-title = slide.shapes.title
-body = slide.placeholders[1]
-title.text = "Slide 2"
-tf = body.text_frame
-tf.text = "Bullet Points:"
-bullet_slide = tf.add_paragraph()
-bullet_slide.text = "Point 1"
-bullet_slide.level = 0
-bullet_slide = tf.add_paragraph()
-bullet_slide.text = "Point 2"
-bullet_slide.level = 0
-
-# Save the presentation to a file
-presentation.save("path/to/new_presentation.pptx")
+prs = Presentation()
+slide = create_blank_slide(prs)
+add_text_to_slide(slide, "Hello World")
+save_presentation_as_file(prs, "presentation.pptx")
 ```
 
-This example demonstrates how to add content to slides, including bullet points.
+## Examples
 
-## Example 3: Customizing slide layouts
+### Creating a Blank Slide and Adding Text
 
 ```python
-from pptx import Presentation
-
-# Create a new presentation object
-presentation = Presentation()
-
-# Add a title slide with custom layout
-custom_slide_layout = presentation.slide_layouts[5]
-slide = presentation.slides.add_slide(custom_slide_layout)
-title = slide.shapes.title
-subtitle = slide.placeholders[1]
-title.text = "My Custom Slide"
-subtitle.text = "Created with python-pptx"
-
-# Save the presentation to a file
-presentation.save("path/to/new_presentation.pptx")
+prs = Presentation()
+slide = create_blank_slide(prs)
+add_text_to_slide(slide, "Hello World")
+save_presentation_as_file(prs, "presentation.pptx")
 ```
 
-This example demonstrates how to use a custom slide layout for a specific slide in the presentation. You can customize the layout by selecting an appropriate index from the `slide_layouts` list.
+In this example, we create a new presentation object `prs`, then create a blank slide using the `create_blank_slide` function and assign it to the variable `slide`. We then add text to the slide using the `add_text_to_slide` function. Finally, we save the presentation as a file named "presentation.pptx" using the `save_presentation_as_file` function.
 
-These examples provide a basic understanding of how to use this script to create PowerPoint presentations using the `python-pptx` package. Feel free to explore the package documentation for more advanced functionality and customization options.
+### Adding an Image to a Slide
+
+```python
+prs = Presentation()
+slide = create_blank_slide(prs)
+add_image_to_slide(slide, "image.jpg", left=Inches(1), top=Inches(1), width=Inches(4), height=Inches(3))
+save_presentation_as_file(prs, "presentation.pptx")
+```
+
+In this example, we create a new presentation object `prs`, then create a blank slide using the `create_blank_slide` function and assign it to the variable `slide`. We then add an image to the slide using the `add_image_to_slide` function. The image is specified by the file path "image.jpg". We also specify the position and size of the image on the slide. Finally, we save the presentation as a file named "presentation.pptx" using the `save_presentation_as_file` function.
+
+### Adding a Chart to a Slide
+
+```python
+prs = Presentation()
+slide = create_blank_slide(prs)
+data = [
+    ["Category 1", "Category 2", "Category 3"],
+    [10, 20, 30],
+    [40, 50, 60]
+]
+chart = add_chart(slide, data, chart_type=XL_CHART_TYPE.COLUMN_CLUSTERED)
+save_presentation_as_file(prs, "presentation.pptx")
+```
+
+In this example, we create a new presentation object `prs`, then create a blank slide using the `create_blank_slide` function and assign it to the variable `slide`. We then create some data for the chart in the form of a nested list. We pass this data along with the chart type (in this case XL_CHART_TYPE.COLUMN_CLUSTERED) to the `add_chart` function to add a chart to the slide. Finally, we save the presentation as a file named "presentation.pptx" using the `save_presentation_as_file` function.
+
+### Adding a Table to a Slide
+
+```python
+prs = Presentation()
+slide = create_blank_slide(prs)
+table = add_table_to_slide(slide, rows=3, columns=3)
+table.cell(0, 0).text = "Header 1"
+table.cell(0, 1).text = "Header 2"
+table.cell(0, 2).text = "Header 3"
+table.cell(1, 0).text = "Data 1"
+table.cell(1, 1).text = "Data 2"
+table.cell(1, 2).text = "Data 3"
+save_presentation_as_file(prs, "presentation.pptx")
+```
+
+In this example, we create a new presentation object `prs`, then create a blank slide using the `create_blank_slide` function and assign it to the variable `slide`. We then add a table to the slide using the `add_table_to_slide` function and assign it to the variable `table`. We can access individual cells in the table using the `cell` method of the table object. Finally, we save the presentation as a file named "presentation.pptx" using the `save_presentation_as_file` function.
+
+These are just a few examples of what you can do with this script. Please refer to the function definitions and their respective comments for more information on how to use each function.

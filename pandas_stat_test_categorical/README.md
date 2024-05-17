@@ -1,813 +1,163 @@
 # Overview
 
-This python script provides a set of functions to perform various calculations and analyses on categorical data in a pandas DataFrame. It includes functions to calculate category frequencies, proportions, percentages, cumulative frequencies, cumulative proportions, minimum and maximum values, mode(s), median(s), range, count of non-null and null values, count of unique values, count of trivial values, missing values handling, infinite values handling, duplicate columns handling, chi-square tests (contingency table, goodness-of-fit), Fisher's exact test, G-test, Cramer's V coefficient, entropy, Gini index, concentration ratio, diversity index (Shannon's entropy), Simpson's index of diversity, Jaccard similarity index, one-way ANOVA and Tukey HSD test.
+This python script provides a set of functions for analyzing and handling data in pandas DataFrames. It includes functions for calculating the frequency and percentage of each category in a column, as well as across all columns. It also provides functions for handling missing and infinite data, removing null and trivial columns, and calculating various statistical measures such as mode, median, mean, standard deviation, variance, range, quartiles, skewness, and kurtosis.
 
 # Usage
 
-To use this script in your python project:
-1. Import the required libraries:
+To use this package, you need to have pandas and numpy installed. You can install them using pip:
+
+```
+pip install pandas numpy
+```
+
+You can then import the necessary functions from the script into your python code:
+
 ```python
 import pandas as pd
 import numpy as np
-from scipy.stats import chi2_contingency
+from scipy.stats import skew, kurtosis
+
+from script_name import calculate_category_frequency, calculate_category_percentage,
+                         calculate_all_columns_category_frequency,
+                         calculate_all_columns_category_percentage,
+                         handle_missing_data,
+                         handle_infinite_data,
+                         remove_null_columns,
+                         remove_trivial_columns,
+                         calculate_mode,
+                         calculate_median,
+                         calculate_mean,
+                         calculate_std,
+                         calculate_variance,
+                         calculate_range,
+                         calculate_column_min,
+                         Calculate_max,
+                         Calculate_quartiles,
+                         Calculate_interquartile_range,
+                         Calculate_skewness,
+                         Calculate_kurtosis
 ```
-2. Copy the code from the script into your project or import the functions you want to use individually.
 
 # Examples
 
-Here are some examples demonstrating the usage of the functions:
+Here are some examples of how to use the functions provided by this script:
 
-### Calculate Category Frequency
+1. Calculating the frequency of each category in a column:
 
 ```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'A', 'C', 'B', 'B']})
-
-result = calculate_category_frequency(dataframe, 'Category')
-
-print(result)
+df = pd.DataFrame({'A': ['apple', 'banana', 'apple', 'orange', 'banana']})
+frequency = calculate_category_frequency(df, 'A')
+print(frequency)
 ```
 
 Output:
 ```
-  Category  Frequency
-0        B          3
-1        A          2
-2        C          1
+apple     2
+banana    2
+orange    1
+Name: A, dtype: int64
 ```
 
-### Calculate Category Proportions
+2. Calculating the percentage of each category in a column:
 
 ```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'A', 'C', 'B', 'B']})
-
-result = calculate_category_proportions(dataframe, 'Category')
-
-print(result)
+df = pd.DataFrame({'A': ['apple', 'banana', 'apple', 'orange', 'banana']})
+percentage = calculate_category_percentage(df, 'A')
+print(percentage)
 ```
 
 Output:
 ```
-  Category  Proportion
-0        B    0.500000
-1        A    0.333333
-2        C    0.166667
+  Category  Percentage
+0    apple        40.0
+1   banana        40.0
+2   orange        20.0
 ```
 
-### Calculate Category Percentage
+3. Calculating the frequency of each category across all columns:
 
 ```python
-# Input column
-column = pd.Series(['A', 'B', 'A', 'C', 'B', 'B'])
-
-result = calculate_category_percentage(column)
-
-print(result)
+df = pd.DataFrame({'A': ['apple', 'banana', 'apple', 'orange', 'banana'],
+                   'B': [1, 2, 3, 4, 5]})
+frequency = calculate_all_columns_category_frequency(df)
+print(frequency)
 ```
 
 Output:
 ```
-  category  percentage
-0        B   50.000000
-1        A   33.333333
-2        C   16.666667
+          A    B
+apple   2.0  NaN
+banana  2.0  NaN
+orange  1.0  NaN
+1       NaN  1.0
+2       NaN  1.0
+3       NaN  1.0
+4       NaN  1.0
+5       NaN  1.0
 ```
 
-### Calculate Cumulative Frequency
+4. Handling missing data by excluding rows with missing values:
 
 ```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'A', 'C', 'B', 'B']})
-
-result = calculate_cumulative_frequency(dataframe, 'Category')
-
-print(result)
+df = pd.DataFrame({'A': [1, np.nan, 3],
+                   'B': [4, np.nan, np.nan]})
+handled_df = handle_missing_data(df, method='exclude')
+print(handled_df)
 ```
 
 Output:
 ```
-A    2
-B    5
-C    6
-Name: Category, dtype: int64
+     A    B
+0  1.0 4.0
 ```
 
-### Calculate Cumulative Proportion
+5. Handling infinite data by excluding rows with infinite values:
 
 ```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'A', 'C', 'B', 'B']})
-
-result = calculate_cumulative_proportion(dataframe, 'Category')
-
-print(result)
+df = pd.DataFrame({'A': [1, np.inf, -np.inf],
+                   'B': [np.nan, np.inf, -np.inf]})
+handled_df = handle_infinite_data(df, method='exclude')
+print(handled_df)
 ```
 
 Output:
 ```
-  Category  Cumulative Proportion
-0        B               0.500000
-1        A               0.333333
-2        C               0.166667
+   A   B
+0  1 NaN
 ```
 
-### Calculate Cumulative Percentage
+6. Removing null columns:
 
 ```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'A', 'C', 'B', 'B']})
-
-result = calculate_cumulative_percentage(dataframe, 'Category')
-
-print(result)
+df = pd.DataFrame({'A': [1, 2, np.nan],
+                   'B': [3, np.nan, 5]})
+removed_null_columns_df = remove_null_columns(df)
+print(removed_null_columns_df)
 ```
 
 Output:
 ```
-C    16.666667
-A    50.000000
-B   100.000000
-Name: Category, dtype: float64
+     B
+0  3.0
+1  NaN
+2  5.0
 ```
 
-### Calculate Mode
+7. Removing trivial columns:
 
 ```python
-# Input column
-column = pd.Series(['A', 'B', 'A', 'C', 'B', 'B'])
-
-result = calculate_mode(column)
-
-print(result)
+df = pd.DataFrame({'A': [1, 2, 3],
+                   'B': [4, 4, 4]})
+removed_trivial_columns_df = remove_trivial_columns(df)
+print(removed_trivial_columns_df)
 ```
 
 Output:
 ```
-['B']
+   A
+0  1
+1  2
+2  3
 ```
 
-### Calculate Median
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', 'B', 'C'], 
-                          'Value': [1, 2, 3, 4, 5]})
-
-result = calculate_median(dataframe, 'Value')
-
-print(result)
-```
-
-Output:
-```
-[1.5, 3.5, 5]
-```
-
-### Calculate Range
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', 'B', 'C'], 
-                          'Value': [1, 2, 3, 4, 5]})
-
-result = calculate_range(dataframe, 'Value')
-
-print(result)
-```
-
-Output:
-```
-(1, 5)
-```
-
-### Calculate Minimum
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', 'B', 'C'], 
-                          'Value': [1, 2, 3, 4, 5]})
-
-result = calculate_minimum(dataframe, 'Value')
-
-print(result)
-```
-
-Output:
-```
-1
-```
-
-### Calculate Maximum
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', 'B', 'C'], 
-                          'Value': [1, 2, 3, 4, 5]})
-
-result = calculate_max_value(dataframe, 'Value')
-
-print(result)
-```
-
-Output:
-```
-5
-```
-
-### Count Non-null Values
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', np.nan, 'C'], 
-                          'Value': [1, 2, 3, 4, 5]})
-
-result = count_non_null_values(dataframe, 'Category')
-
-print(result)
-```
-
-Output:
-```
-4
-```
-
-### Calculate Null Count
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', np.nan, 'C'], 
-                          'Value': [1, 2, 3, 4, 5]})
-
-result = calculate_null_count(dataframe, 'Category')
-
-print(result)
-```
-
-Output:
-```
-1
-```
-
-### Calculate Unique Count
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', np.nan, 'C'], 
-                          'Value': [1, 2, 3, 4, 5]})
-
-result = calculate_unique_count(dataframe, 'Category')
-
-print(result)
-```
-
-Output:
-```
-4
-```
-
-### Count Trivial Values
-
-```python
-# Input column
-column = pd.Series([0, 0, 0, 1])
-
-result = count_trivial_values(column)
-
-print(result)
-```
-
-Output:
-```
-3
-```
-
-### Calculate Missing Values
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.nan, 'B', np.nan], 
-                          'Value': [1, 2, np.nan, 4]})
-
-result = calculate_missing_values(dataframe, 'Category')
-
-print(result)
-```
-
-Output:
-```
-2
-```
-
-### Count Infinite Values
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.inf, 'B', -np.inf]})
-
-result = count_infinite_values(dataframe, 'Category')
-
-print(result)
-```
-
-Output:
-```
-2
-```
-
-### Check Missing Values
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.nan, 'B', np.nan], 
-                          'Value': [1, 2, np.nan, 4]})
-
-result = check_missing_values(dataframe)
-
-print(result)
-```
-
-Output:
-```
-True
-```
-
-### Check Infinite Values
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.inf, 'B', -np.inf]})
-
-result = check_infinite_values(dataframe)
-
-print(result)
-```
-
-Output:
-```
-True
-```
-
-### Handle Missing Values (Drop Rows)
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.nan, 'B', np.nan], 
-                          'Value': [1, 2, np.nan, 4]})
-
-handle_missing_values_drop(dataframe)
-
-print(dataframe)
-```
-
-Output:
-```
-  Category  Value
-0        A    1.0
-```
-
-### Handle Infinite Values
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.inf, 'B', -np.inf]})
-
-# Drop rows containing infinite values
-result_drop = handle_infinite_values(dataframe, method='drop')
-
-print(result_drop)
-```
-
-Output:
-```
-  Category
-0        A
-2        B
-```
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.inf, 'B', -np.inf]})
-
-# Impute infinite values with the maximum value of each column
-result_impute_max = handle_infinite_values(dataframe, method='impute_max')
-
-print(result_impute_max)
-```
-
-Output:
-```
-  Category
-0        A
-1      inf
-2        B
-3     -inf
-```
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.inf, 'B', -np.inf]})
-
-# Impute infinite values with the minimum value of each column
-result_impute_min = handle_infinite_values(dataframe, method='impute_min')
-
-print(result_impute_min)
-```
-
-Output:
-```
-  Category
-0        A
-1     -inf
-2        B
-3     -inf
-```
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', np.inf, 'B', -np.inf]})
-
-# Impute infinite values with non-infinite values of each column
-result_impute_non_infinite = handle_infinite_values(dataframe, method='impute_non_infinite')
-
-print(result_impute_non_infinite)
-```
-
-Output:
-```
-  Category
-0        A
-1      inf
-2        B
-3     -inf
-```
-
-### Handle Null Columns
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': [np.nan, np.nan, np.nan], 
-                          'Value': [1, 2, 3]})
-
-result = handle_null_columns(dataframe, replace_with=0)
-
-print(result)
-```
-
-Output:
-```
-   Category  Value
-0       0.0      1
-1       0.0      2
-2       0.0      3
-
-### Handle Trivial Columns
-
-```python
-
-# Input dataframe with trivial column 'A' having all zeros
-
-dataframe = pd.DataFrame({'A': [0, 0, 0], 'B': [1, 2, 3]})
-
-result = handle_trivial_columns(dataframe, constant_value=999)
-
-print(result)
-```
-
-Output:
-```
-     A  B
-0  999  1
-1  999  2
-2  999  3
-```
-
-### Handle Duplicate Columns
-
-```python
-# Input dataframe with duplicate column 'A'
-dataframe = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6], 'A': [7, 8, 9]})
-
-# Drop duplicate columns
-result_drop_duplicates = handle_duplicate_columns(dataframe, merge=False)
-
-print(result_drop_duplicates)
-```
-
-Output:
-```
-   A  B
-0  7  4
-1  8  5
-2  9  6
-```
-
-```python
-# Input dataframe with duplicate column 'A'
-dataframe = pd.DataFrame({'A': [1, 2, np.nan], 'B': [4, np.nan, np.nan], 'A': [np.nan, np.nan, np.nan]})
-
-# Merge duplicate columns into one unique column
-result_merge_duplicates = handle_duplicate_columns(dataframe)
-
-print(result_merge_duplicates)
-```
-
-Output:
-```
-    A    B
-0 NaN    *
-1 NaN    *
-2 NaN   **
-```
-
-### Calculate Chi-Square Test (Contingency Table)
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category1': ['A', 'B', 'B', 'A', 'B'], 
-                          'Category2': ['X', 'Y', 'Y', 'X', 'Y']})
-
-chi2_statistic, p_value, dof, expected = calculate_chi_square_test(dataframe, 'Category1', 'Category2')
-
-print(chi2_statistic)
-print(p_value)
-print(dof)
-print(expected)
-```
-
-Output:
-```
-0.3333333333333333
-0.8464817248906141
-1
-[[0.5 0.5]
- [1.  1. ]]
-```
-
-### Calculate Chi-Square Goodness-of-Fit Test
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'B', 'A', 'B']})
-
-chi2_statistic, p_value, dof, expected_frequencies = calculate_chi_square_goodness_of_fit(dataframe, 'Category')
-
-print(chi2_statistic)
-print(p_value)
-print(dof)
-print(expected_frequencies)
-```
-
-Output:
-```
-0.6666666666666666
-0.8773721321030069
-2
-   Category  Frequency       Proportion  Expected Frequency
-0        B          3              NaN                   2
-1        A          2              NaN                   1
-```
-
-
-### Calculate Fisher's Exact Test
-
-```python
-
-# Input dataframe
-
-dataframe = pd.DataFrame({'Category1': ['A', 'A', 'B', 'B'], 
-                          'Category2': ['X', 'Y', 'X', 'Y']})
-
-odds_ratio, p_value = calculate_fishers_exact(dataframe, 'Category1', 'Category2')
-
-print(odds_ratio)
-
-print(p_value)
-
-
-```
-
-Output:
-
-```
-inf
-
-0.49999999999999994
-
-
-```
-
-
-### Calculate G-Test
-
-```python
-
-# Input dataframe
-
-dataframe = pd.DataFrame({'Category1': ['A', 'A', 'B', 'B'], 
-                          'Category2': ['X', 'Y', 'X', 'Y']})
-
-p_value = calculate_g_test(dataframe, 'Category1', 'Category2')
-
-print(p_value)
-
-
-```
-
-Output:
-
-```
-0.8418809067483113
-
-
-```
-
-
-
-### Calculate Cramer's V Coefficient
-
-```python
-
-# Input columns
-column1 = pd.Series(['A', 'B', 'C'])
-column2 = pd.Series(['X', 'Y', 'X'])
-
-result = cramers_v(column1, column2)
-
-print(result)
-
-
-```
-
-Output:
-
-```
-0.0
-
-
-
-```
-
-
-
-### Calculate Entropy
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'A', 'C', 'B', 'B']})
-
-result = calculate_entropy(dataframe, 'Category')
-
-print(result)
-```
-
-Output:
-```
-1.5219280948873621
-```
-
-### Calculate Gini Index
-
-```python
-# Input column
-column = pd.Series([0, 0, 0, 1])
-
-result = calculate_gini_index(column)
-
-print(result)
-```
-
-Output:
-```
-0.375
-```
-
-### Calculate Concentration Ratio
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'B', 'A', 'C', 'B', 'B']})
-
-result = calculate_concentration_ratio(dataframe, 'Category')
-
-print(result)
-```
-
-Output:
-```
-0.50000000000000000
-```
-
-### Diversity Index
-
-```python
-
-# Input column
-column = pd.Series(['A','A','B','C'])
-
-result= diversity_index(column)
-
-print(result)
-
-```
-
-
-Output:
-
-```
-1.5
-
-
-
-```
-
-
-### Simpson's Index of Diversity
-
-```python
-
-# Input dataframe
-
-dataframe = pd.DataFrame({'Category': ['A','A','B','C']})
-
-result= calculate_simpsons_index(dataframe, 'Category')
-
-print(result)
-
-```
-
-
-Output:
-
-```
-6.000000000000001
-
-
-
-```
-
-
-
-### Jaccard Similarity Index
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category1': ['A', 'B', 'C'], 
-                          'Category2': ['B', 'C', 'D']})
-
-result = calculate_jaccard_similarity(dataframe, 'Category1', 'Category2')
-
-print(result)
-```
-
-Output:
-```
-0.6666666666666667
-```
-
-
-### One-Way ANOVA
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Category': ['A', 'A', 'B', 'B', 'C'],
-                          'Value': [1, 2, 3, 4, 5]})
-
-anova_results = perform_anova(dataframe, ['Value'])
-
-print(anova_results)
-```
-
-Output:
-```
-   Column  F-statistic   p-value
-0   Value          NaN       NaN
-```
-
-### Tukey HSD Test
-
-```python
-# Input dataframe
-dataframe = pd.DataFrame({'Group': ['A', 'A', 'B', 'B', 'C'],
-                          'Value': [1, 2, 3, 4, 5]})
-
-tukeyhsd_results = perform_tukeyhsd(dataframe, target_column='Value')
-
-print(tukeyhsd_results)
-```
-
-Output:
-```
-Multiple Comparison of Means - Tukey HSD, FWER=0.05  
-====================================================
- group1 group2 meandiff p-adj lower upper reject
-----------------------------------------------------
-      A      B     -2.0    NA    NA    NA   True
-      A      C     -4.0    NA    NA    NA   True
-      B      C     -2.0    NA    NA    NA   True
-----------------------------------------------------
-```
-
-# Conclusion
-
-This script provides a comprehensive set of functions for working with categorical data in pandas DataFrames. It includes functionality to calculate category frequencies, proportions, percentages, cumulative frequencies, cumulative proportions, minimum and maximum values, mode(s), median(s), range, count of non-null and null values, count of unique values, count of trivial values, missing values handling, infinite values handling, duplicate columns handling, chi-square tests (contingency table, goodness-of-fit), Fisher's exact test, G-test, Cramer's V coefficient, entropy, Gini index, concentration ratio, diversity index (Shannon's entropy), Simpson's index of diversity, Jaccard similarity index, one-way ANOVA and Tukey HSD test. These functions can be useful for data analysis and exploration tasks involving categorical data.
+These are just a few examples of the functionality provided by this script. Refer to the function documentation for more details on each function's usage and parameters.

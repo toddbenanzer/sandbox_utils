@@ -1,202 +1,193 @@
-## Overview
+# PowerPoint Presentation Generator
 
-This python script provides functions to create, modify, and format PowerPoint presentations using the `pptx` library. The script allows users to create empty presentations, define slide layouts based on branding guidelines, embed Plotly charts, format presentations according to branding guidelines, add titles, subtitles, text boxes, images, tables, bullet points to slides, set text formats and slide backgrounds, save presentations as files, open existing presentations, insert text into placeholders on slides, and apply slide layouts and formatting guidelines.
+This package provides a set of functions for generating PowerPoint presentations using the python-pptx library and the Plotly library. The package allows users to easily create slides, add text and images, and insert Plotly charts into their presentations.
+
+## Installation
+
+To install the package, simply run:
+
+```bash
+pip install pptx plotly
+```
 
 ## Usage
 
-To use this script, you need to have the `pptx` library installed. You can install it using pip:
+To use the package, first import the necessary modules:
 
-```bash
-pip install python-pptx
+```python
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN
+from pptx.enum.chart import XL_LABEL_POSITION, XL_TICK_LABEL_POSITION, XL_LEGEND_POSITION, XL_CHART_TYPE
+import plotly.graph_objects as go
+import os
 ```
 
-Once you have the `pptx` library installed, you can import the necessary functions from the script and start using them in your own Python code.
+### Creating a Presentation
+
+To create a new PowerPoint presentation object, use the `create_presentation()` function:
+
+```python
+prs = create_presentation()
+```
+
+### Adding Slides
+
+You can add slides to the presentation using different slide layouts. The available layouts are represented by numbers starting from 0. Use the `add_slide()` function to add a slide with a specific layout:
+
+```python
+slide_layout = 1  # Use slide layout number 1
+slide = add_slide(prs, slide_layout)
+```
+### Adding Text
+
+To add text to a slide, use the `add_text_to_slide()` function:
+
+```python
+slide_index = 0  # Add text to slide with index 0 (the first slide)
+text = "Hello World!"
+add_text_to_slide(prs, slide_index, text)
+```
+
+### Adding Images
+
+To add an image to a slide, use the `add_image_to_slide()` function:
+
+```python
+slide_index = 0  # Add image to slide with index 0 (the first slide)
+image_path = "image.png"  # Specify the path to the image file
+left = 1  # Specify the position of the image on the slide
+top = 1
+width = 6  # Specify the width and height of the image
+height = 4.5
+add_image_to_slide(prs.slides[slide_index], image_path, left, top, width, height)
+```
+
+### Adding Plotly Charts
+
+To add a Plotly chart to a slide, use the `add_plotly_chart_to_slide()` function:
+
+```python
+slide_index = 0  # Add chart to slide with index 0 (the first slide)
+chart_data = [...]  # Specify the data for the chart
+chart = go.Figure(data=chart_data)  # Create a Plotly chart object
+add_plotly_chart_to_slide(prs, slide_index, chart)
+```
+
+### Formatting Text
+
+You can format the font of text on a slide using the `format_text_font()` function:
+
+```python
+text_frame = textbox.text_frame  # Get the text frame of a shape containing text
+format_text_font(text_frame.text, font_name="Arial", font_size=12, bold=True, italic=False, underline=True, align="center")
+```
+
+### Formatting Background Color
+
+You can format the background color of a slide using the `format_background_color()` function:
+
+```python
+slide = prs.slides[slide_index]  # Get a specific slide
+color = (255, 255, 255)  # Specify the RGB color values (e.g., white)
+format_background_color(slide, color)
+```
+
+### Exporting Presentation
+
+To export your presentation to a PowerPoint file or a PDF file, use the `export_presentation()` and `save_ppt_as_pdf()` functions respectively:
+
+```python
+output_file_pptx = "presentation.pptx"
+output_file_pdf = "presentation.pdf"
+export_presentation(prs, output_file_pptx)
+save_ppt_as_pdf(output_file_pptx, output_file_pdf)
+```
 
 ## Examples
 
-Here are some examples of how the functions in this script can be used:
+Here are some examples demonstrating how to use the package:
 
-1. Create an empty presentation:
+### Example 1: Creating a Simple Presentation
 
 ```python
-from ppt_functions import create_empty_presentation
+# Create a new presentation object
+prs = create_presentation()
 
-presentation = create_empty_presentation()
+# Add a title slide
+title = "My Presentation"
+add_title_slide(prs, title)
+
+# Add a slide with text
+slide_layout = 1
+slide = add_slide(prs, slide_layout)
+text = "This is a sample text."
+add_text_to_slide(prs, 1, text)
+
+# Export the presentation to a PowerPoint file
+output_file = "presentation.pptx"
+export_presentation(prs, output_file)
 ```
 
-2. Define slide layouts based on branding guidelines:
+### Example 2: Adding an Image and Formatting Text
 
 ```python
-from ppt_functions import define_slide_layouts
+# Create a new presentation object
+prs = create_presentation()
 
-branding_guidelines = {
-    'slide_layout': 'Title Slide'
-}
+# Add a title slide
+title = "My Presentation"
+add_title_slide(prs, title)
 
-define_slide_layouts(presentation, branding_guidelines)
-```
-
-3. Embed a Plotly chart into a slide:
-
-```python
-from ppt_functions import embed_plotly_chart
-
-slide_index = 0
-chart_data = [
-    ['Category', 'Value'],
-    ['A', 10],
-    ['B', 20],
-    ['C', 15]
-]
-
-presentation = embed_plotly_chart(presentation, slide_index, chart_data)
-```
-
-4. Format the presentation according to branding guidelines:
-
-```python
-from ppt_functions import format_presentation
-
-format_presentation(presentation)
-```
-
-5. Add a title and subtitle to a slide:
-
-```python
-from ppt_functions import add_title_and_subtitle
-
-slide = presentation.slides[0]
-title = 'Title'
-subtitle = 'Subtitle'
-
-add_title_and_subtitle(slide, title, subtitle)
-```
-
-6. Add a text box to a slide:
-
-```python
-from ppt_functions import add_text_box
-
-slide = presentation.slides[0]
-content = 'This is some text.'
-
-add_text_box(slide, content)
-```
-
-7. Add an image to a slide:
-
-```python
-from ppt_functions import add_image_to_slide
-
-slide = presentation.slides[0]
-image_path = 'path/to/image.png'
-left = 1  # inches
-top = 1  # inches
-width = 3  # inches
-height = 3  # inches
-
+# Add a slide with an image and formatted text
+slide_layout = 1
+slide = add_slide(prs, slide_layout)
+image_path = "image.png"
+left = 1
+top = 1
+width = 6
+height = 4.5
 add_image_to_slide(slide, image_path, left, top, width, height)
+text = "This is a sample text."
+add_text_to_slide(prs, 1, text)
+
+# Format the font of the text on the slide
+format_text_font(slide.shapes[1].text_frame.text,
+                 font_name="Arial",
+                 font_size=12,
+                 bold=True,
+                 italic=False,
+                 underline=True,
+                 align="center")
+
+# Export the presentation to a PowerPoint file
+output_file = "presentation.pptx"
+export_presentation(prs, output_file)
 ```
 
-8. Add a table to a slide:
+### Example 3: Adding a Plotly Chart
 
 ```python
-from ppt_functions import add_table_to_slide
+# Create a new presentation object
+prs = create_presentation()
 
-slide_index = 0
-data = [
-    ['Name', 'Age'],
-    ['John', 25],
-    ['Jane', 30]
-]
-headers = ['Name', 'Age']
+# Add a title slide
+title = "My Presentation"
+add_title_slide(prs, title)
 
-presentation = add_table_to_slide(presentation, slide_index, data, headers)
+# Add a slide with a Plotly chart
+slide_layout = 1
+slide = add_slide(prs, slide_layout)
+chart_data = [...]  # Specify the data for the chart
+chart = go.Figure(data=chart_data)  # Create a Plotly chart object
+add_plotly_chart_to_slide(prs, 1, chart)
+
+# Export the presentation to a PowerPoint file
+output_file = "presentation.pptx"
+export_presentation(prs, output_file)
 ```
 
-9. Add bullet points to a slide:
+## License
 
-```python
-from ppt_functions import add_bullet_points
-
-slide = presentation.slides[0]
-content = ['Item 1', 'Item 2', 'Item 3']
-
-add_bullet_points(slide, content)
-```
-
-10. Set the font style, size, and color for text in slides:
-
-```python
-from ppt_functions import set_text_format
-
-slide_index = 0
-text_index = 0
-font_name = 'Arial'
-font_size = 12
-font_color = (255, 0, 0)  # Red
-
-set_text_format(presentation, slide_index, text_index, font_name, font_size, font_color)
-```
-
-11. Set the background color or image for slides:
-
-```python
-from ppt_functions import set_slide_background
-
-slide_index = 0
-background = 'path/to/background.png'
-
-presentation = set_slide_background(presentation, slide_index, background)
-```
-
-12. Save the generated presentation as a file:
-
-```python
-from ppt_functions import save_presentation
-
-filename = 'output.pptx'
-
-save_presentation(presentation, filename)
-```
-
-13. Create a new presentation:
-
-```python
-from ppt_functions import create_presentation
-
-presentation = create_presentation()
-```
-
-14. Open an existing presentation:
-
-```python
-from ppt_functions import open_presentation
-
-file_path = 'path/to/presentation.pptx'
-
-presentation = open_presentation(file_path)
-```
-
-15. Insert text into placeholders on slides:
-
-```python
-from ppt_functions import insert_text
-
-slide_index = 0
-placeholder_id = 1  # Placeholder ID for title
-text = 'This is the title'
-
-insert_text(presentation, slide_index, placeholder_id, text)
-```
-
-16. Apply slide layouts and formatting guidelines:
-
-```python
-from ppt_functions import apply_slide_layout
-
-slide_index = 0
-layout_name = 'Title Slide'
-
-apply_slide_layout(presentation, slide_index, layout_name)
-```
+This package is licensed under the MIT License.
