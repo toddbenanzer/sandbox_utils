@@ -1,95 +1,88 @@
-## Overview
+# DataFetcher Documentation
 
-This Python script provides various functionalities for data analysis and machine learning. It includes functions to read CSV files, fetch data from an API, connect to a database, clean and preprocess data, perform statistical analysis, calculate descriptive statistics, calculate correlation between variables, perform regression analysis, create visualizations using matplotlib, generate summary reports, schedule report generation, export data to different file formats, filter and sort data, merge datasets, handle missing values in the data, perform time series analysis, apply machine learning algorithms, perform sentiment analysis on text, cluster data using K-means algorithm, detect outliers in a dataset, perform PCA dimensionality reduction, select features using Recursive Feature Elimination (RFE), forecast time series using ARIMA models, and forecast time series using LSTM models.
+## Class: DataFetcher
 
-## Usage
+The `DataFetcher` class is designed to fetch data from various sources, including APIs, databases, and CSV files. It also supports scheduling regular data refreshes at specified intervals.
 
-To use this script, you need to have the following packages installed:
+### Initialization
 
-- pandas
-- requests
-- sqlite3
-- numpy
-- matplotlib
-- schedule
-- scikit-learn
-- textblob
-- statsmodels
-- tensorflow
 
-You can install these packages using pip:
 
-```
-pip install pandas requests sqlite3 numpy matplotlib schedule scikit-learn textblob statsmodels tensorflow
-```
+# DataPreprocessor Documentation
 
-Once the required packages are installed, you can import the script into your Python environment and use its functions. Here's an example of how to use some of the functions:
+## Class: DataPreprocessor
 
-```python
-import my_script
+The `DataPreprocessor` class is designed to handle various data preprocessing tasks, such as handling missing values, normalizing data, and transforming data. It leverages pandas and sklearn for efficient data handling and preprocessing.
 
-# Read a CSV file
-data = my_script.read_csv_file('data.csv')
+### Initialization
 
-# Fetch data from an API
-url = 'https://api.example.com/data'
-data = my_script.fetch_data_from_api(url)
 
-# Connect to a database
-database_path = 'database.db'
-connection = my_script.connect_to_database(database_path)
 
-# Clean and preprocess data
-cleaned_data = my_script.clean_and_preprocess_data(data)
-```
+# DataAnalyzer Documentation
 
-## Examples
+## Class: DataAnalyzer
 
-Here are some examples demonstrating the usage of the script's functions:
+The `DataAnalyzer` class provides methods for performing data analysis including descriptive statistics, exploratory data analysis, and regression analysis using both linear and logistic regression models.
 
-- Reading a CSV file:
+### Initialization
 
-```python
-data = my_script.read_csv_file('data.csv')
-print(data)
-```
 
-- Performing statistical analysis on data:
 
-```python
-statistics = my_script.perform_statistical_analysis(data)
-print(statistics)
-```
+# DataVisualizer Documentation
 
-- Calculating descriptive statistics for a dataset:
+## Class: DataVisualizer
 
-```python
-descriptive_statistics = my_script.calculate_descriptive_statistics(data)
-print(descriptive_statistics)
-```
+The `DataVisualizer` class is designed to visualize data using various types of charts, providing features for customization and export options.
 
-- Calculating correlation between two variables in a dataframe:
+### Initialization
 
-```python
-correlation = my_script.calculate_correlation(dataframe, 'variable1', 'variable2')
-print(correlation)
-```
 
-- Performing regression analysis using scikit-learn:
 
-```python
-X = data[['feature1', 'feature2']]
-y = data['target']
-model = my_script.perform_regression_analysis(X, y)
-print(model.coef_)
-```
+# ReportGenerator Documentation
 
-- Creating a scatter plot visualization using matplotlib:
+## Class: ReportGenerator
 
-```python
-x = [1, 2, 3, 4, 5]
-y = [2, 4, 6, 8, 10]
-my_script.create_visualization(x, y, 'scatter')
-```
+The `ReportGenerator` class is designed to generate and schedule reports based on provided analysis results. It supports multiple output formats and allows for scheduled report generation and distribution.
 
-These are just a few examples of the functionalities provided by the script. You can explore the other functions and their respective parameters to perform various data analysis tasks.
+### Initialization
+
+
+
+# load_config Documentation
+
+## Function: load_config
+
+The `load_config` function is designed to load configuration settings from a specified file. It supports both JSON and YAML formats, making it versatile for configuration management in various applications.
+
+### Parameters
+
+
+
+# setup_environment Documentation
+
+## Function: setup_environment
+
+The `setup_environment` function ensures that all specified dependencies are installed in the current Python environment. It checks for the existence of each package and installs it if not found.
+
+### Parameters
+
+
+
+# validate_data Documentation
+
+## Function: validate_data
+
+The `validate_data` function validates a provided dataset to ensure it meets specific criteria for further processing. It checks for data integrity, completeness, and adherence to expected formats.
+
+### Parameters
+
+
+
+# setup_logging Documentation
+
+## Function: setup_logging
+
+The `setup_logging` function configures the logging settings for the application based on the specified logging level. This allows developers to control the verbosity of log messages throughout the application.
+
+### Parameters
+

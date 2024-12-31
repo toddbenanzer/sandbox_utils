@@ -1,300 +1,310 @@
-## Overview
+# DataValidator Class Documentation
 
-This package provides various functions for data preprocessing and manipulation tasks. It includes functions for handling missing values, outlier detection and removal, inconsistency detection, categorical variable encoding, numerical variable standardization, datetime and string variable transformation, column type conversion, creating dummy variables, merging datasets, and filtering rows based on user-defined conditions.
+## Overview
+The `DataValidator` class provides a mechanism to validate data within a Pandas DataFrame by checking for missing values, detecting outliers, and identifying inconsistencies according to user-defined rules.
+
+## Initialization
+
+### `__init__(self, dataframe: pd.DataFrame)`
+Initializes the `DataValidator` object with the provided DataFrame.
+
+- **Args:**
+  - `dataframe` (`pd.DataFrame`): The dataset on which validations will be performed.
+
+## Methods
+
+### `check_missing_values(self) -> pd.Series`
+Identifies and reports missing values within the DataFrame.
+
+- **Returns:**
+  - `pd.Series`: A series indicating the count of missing values per column.
+
+### `detect_outliers(self, method: str = "z-score", threshold: float = 3.0) -> Dict[str, pd.DataFrame]`
+Detects outliers in the numerical columns of the DataFrame based on a specified method and threshold.
+
+- **Args:**
+  - `method` (`str`): The method to use for detecting outliers. Options include `'z-score'` or `'IQR'`.
+  - `threshold` (`float`): The threshold beyond which a data point is considered an outlier (default is `3.0`).
+
+- **Returns:**
+  - `Dict[str, pd.DataFrame]`: A dictionary with column names as keys and DataFrames of detected outliers as values.
+
+### `find_inconsistencies(self, column_rules: Dict[str, str]) -> pd.DataFrame`
+Identifies data inconsistencies within the DataFrame based on user-defined rules for specific columns.
+
+- **Args:**
+  - `column_rules` (`Dict[str, str]`): A dictionary where keys are column names and values are rules/conditions in string format.
+
+- **Returns:**
+  - `pd.DataFrame`: A DataFrame highlighting inconsistent records found according to the provided rules.
+
+
+# DataCorrector Class Documentation
+
+## Overview
+The `DataCorrector` class provides functionality to correct inaccuracies in a Pandas DataFrame by imputing missing values and managing outliers. This class can be useful for preprocessing data before analysis.
+
+## Initialization
+
+### `__init__(self, dataframe: pd.DataFrame)`
+Initializes the `DataCorrector` object with the provided DataFrame.
+
+- **Args:**
+  - `dataframe` (`pd.DataFrame`): The dataset to perform corrections on.
+
+## Methods
+
+### `impute_missing_values(self, method: Union[str, Callable[[pd.Series], Union[int, float]]] = "mean") -> pd.DataFrame`
+Fills in missing values in the DataFrame using a specified imputation method.
+
+- **Args:**
+  - `method` (`str` or `callable`): The method to use for imputing missing values. Options include:
+    - `'mean'`: Use the mean of the column to replace missing values.
+    - `'median'`: Use the median of the column to replace missing values.
+    - `'mode'`: Use the mode of the column to replace missing values.
+    - A user-defined function that takes a Pandas Series and returns a scalar.
+  
+- **Returns:**
+  - `pd.DataFrame`: A DataFrame with missing values imputed based on the specified method.
+
+### `handle_outliers(self, method: str = "remove") -> pd.DataFrame`
+Manages outliers in the DataFrame using a specified method.
+
+- **Args:**
+  - `method` (`str`): The method to use for handling outliers. Options include:
+    - `'remove'`: Remove rows with outliers based on the Interquartile Range (IQR).
+    - `'clip'`: Clip outliers to the upper and lower bounds defined by the IQR.
+    - A user-defined function to process outliers.
+  
+- **Returns:**
+  - `pd.DataFrame`: A DataFrame with outliers handled according to the specified method.
+
+### Errors
+- Raises a `ValueError` if an unsupported method is specified for either imputation or outlier handling.
+
+
+# DataStandardizer Class Documentation
+
+## Overview
+The `DataStandardizer` class is designed to standardize the format of specified columns in a Pandas DataFrame. This is useful for ensuring consistent data representation, facilitating data analysis, and improving data quality.
+
+## Initialization
+
+### `__init__(self, dataframe: pd.DataFrame)`
+Initializes the `DataStandardizer` object with the provided DataFrame.
+
+- **Args:**
+  - `dataframe` (`pd.DataFrame`): The dataset on which standardization will be performed.
+
+## Methods
+
+### `standardize_column_format(self, column_name: str, format_type: str) -> pd.DataFrame`
+Standardizes the format of a specified column in the DataFrame.
+
+- **Args:**
+  - `column_name` (`str`): The name of the column to standardize.
+  - `format_type` (`str`): The format type to standardize to. Options include:
+    - `'date'`: Converts the column to a datetime format.
+    - `'currency'`: Converts the column to a float representation by removing currency symbols.
+    - `'percentage'`: Converts the column to a float representation where percentages are converted to decimal form (e.g., '10%' becomes 0.10).
+
+- **Returns:**
+  - `pd.DataFrame`: A DataFrame with the specified column standardized to the desired format.
+
+### Errors
+- Raises a `ValueError` if the specified column does not exist in the DataFrame.
+- Raises a `ValueError` if the provided `format_type` is unsupported. Supported formats include `'date'`, `'currency'`, and `'percentage'`.
+
+
+# ValidationRuleManager Class Documentation
+
+## Overview
+The `ValidationRuleManager` class manages validation rules for data processing, allowing users to define, save, and load rules to facilitate consistent validation operations.
+
+## Initialization
+
+### `__init__(self)`
+Initializes the `ValidationRuleManager` object with an empty dictionary to store rules.
+
+- **Returns:** None
+
+## Methods
+
+### `load_rules(self, rules_file: str) -> None`
+Loads validation rules from a specified file into the rule manager.
+
+- **Args:**
+  - `rules_file` (`str`): Path to the file containing validation rules, expected in JSON format.
+
+- **Returns:** None
+
+- **Raises:**
+  - `FileNotFoundError`: If the specified rules file does not exist.
+  - `json.JSONDecodeError`: If an error occurs while decoding JSON from the file.
+
+### `save_rules(self, rules_file: str) -> None`
+Saves the current set of validation rules to a specified file.
+
+- **Args:**
+  - `rules_file` (`str`): Path to the file where the validation rules will be saved in JSON format.
+
+- **Returns:** None
+
+- **Raises:**
+  - `IOError`: If an error occurs while writing to the file.
+
+### `define_rule(self, rule_name: str, rule_definition: str) -> None`
+Defines a new validation rule by specifying its name and definition.
+
+- **Args:**
+  - `rule_name` (`str`): The name of the rule to be added.
+  - `rule_definition` (`str`): The definition or condition of the rule.
+
+- **Returns:** None
+
+- **Notes:**
+  - If the specified rule name already exists, the existing rule will be updated with the new definition.
+
+
+# ValidationReport Class Documentation
+
+## Overview
+The `ValidationReport` class generates summaries and reports based on validation results for datasets. It supports various output formats for reporting and exporting the validation results.
+
+## Initialization
+
+### `__init__(self, validation_results: Any)`
+Initializes the `ValidationReport` object with the given validation results.
+
+- **Args:**
+  - `validation_results` (`Any`): The results from a data validation process. This can be any data structure containing validation information.
+
+## Methods
+
+### `generate_summary(self, output_format: str = "text") -> Union[str, pd.DataFrame]`
+Generates a summary of the validation results in the specified format.
+
+- **Args:**
+  - `output_format` (`str`): The format of the summary output; options include:
+    - `'text'`: Returns a textual representation of the validation results.
+    - `'html'`: Returns an HTML representation of the validation results in a table format.
+
+- **Returns:**
+  - `Union[str, pd.DataFrame]`: A summary in the specified format.
+
+- **Raises:**
+  - `ValueError`: If an unsupported output format is provided.
+
+### `export_report(self, file_path: str, format: str = "csv") -> None`
+Exports the validation results to a specified file in the desired format.
+
+- **Args:**
+  - `file_path` (`str`): Path to the file where the report will be saved.
+  - `format` (`str`): The file format to use for exporting the report; options include:
+    - `'csv'`: Exports the validation results to a CSV file.
+    - `'json'`: Exports the validation results to a JSON file.
+    - `'xlsx'`: Exports the validation results to an Excel file.
+
+- **Returns:** None
+
+- **Raises:**
+  - `ValueError`: If an unsupported export format is provided.
+
+
+# integrate_with_pandas Function Documentation
+
+## Overview
+The `integrate_with_pandas` function integrates custom validation, correction, and standardization functionalities directly into the Pandas DataFrame class. This allows users to apply data validation, corrections, standardization, and generate reports seamlessly using DataFrame methods.
+
+## Functionality
+
+The function adds the following methods to the Pandas DataFrame:
+
+### `validate(self, column_rules: Dict[str, str] = None) -> Dict[str, Any]`
+Validates the DataFrame to check for missing values, outliers, and inconsistencies based on optional column rules.
+
+- **Args:**
+  - `column_rules` (`Dict[str, str]`, optional): A dictionary of column names and their corresponding validation rules.
+
+- **Returns:**
+  - `Dict[str, Any]`: A dictionary containing:
+    - `missing_values`: Summary of missing values in the DataFrame.
+    - `outliers`: Summary of outliers found.
+    - `inconsistencies`: Summary of any inconsistencies based on column rules (if provided).
+
+### `correct(self) -> pd.DataFrame`
+Corrects the DataFrame by imputing missing values and handling outliers.
+
+- **Returns:**
+  - `pd.DataFrame`: A corrected DataFrame with missing values imputed and outliers handled.
+
+### `standardize(self, column_name: str, format_type: str) -> pd.DataFrame`
+Standardizes the format of a specified column in the DataFrame.
+
+- **Args:**
+  - `column_name` (`str`): The name of the column to standardize.
+  - `format_type` (`str`): The desired format type (e.g., 'date', 'currency', 'percentage').
+
+- **Returns:**
+  - `pd.DataFrame`: A DataFrame with the specified column standardized to the desired format.
+
+### `apply_rules(self, rule_manager: ValidationRuleManager) -> pd.DataFrame`
+Applies validation rules from the specified `ValidationRuleManager` to the DataFrame.
+
+- **Args:**
+  - `rule_manager` (`ValidationRuleManager`): An instance of the ValidationRuleManager containing defined rules.
+
+- **Returns:**
+  - `pd.DataFrame`: The DataFrame after applying the specified validation rules.
+
+### `generate_report(self, format: str = "text") -> str`
+Generates a report summarizing the validation results in the specified format.
+
+- **Args:**
+  - `format` (`str`): The format of the report summary; options include 'text' and 'html'.
+
+- **Returns:**
+  - `str`: A summary of the validation results in the specified format.
+
+### `export_report(self, file_path: str, format: str = "csv") -> None`
+Exports the validation results to a specified file in the desired format.
+
+- **Args:**
+  - `file_path` (`str`): Path to the file where the report will be saved.
+  - `format` (`str`): The file format to use for exporting the report; options include 'csv', 'json', or 'xlsx'.
+
+- **Returns:** None
+
+## Integration
+After calling the `integrate_with_pandas` function, the above methods will be available as part of the Pandas DataFrame instance, enabling enhanced data processing capabilities directly on DataFrames.
+
+
+# validate_and_correct Function Documentation
+
+## Overview
+The `validate_and_correct` function is designed to perform validation and correction of a given Pandas DataFrame based on specified validation rules. It identifies issues within the dataset, applies corrections, and returns the updated DataFrame along with a summary report of the actions taken.
+
+## Parameters
+
+### `dataframe`
+- **Type:** `pd.DataFrame`
+- **Description:** The dataset to be validated and corrected.
+
+### `rules`
+- **Type:** `Dict[str, str]`
+- **Description:** A dictionary of validation rules that define conditions to check against the data. Each key represents a column name, and each value is a condition that should hold true for the data in that column.
+
+## Returns
+- **Type:** `Tuple[pd.DataFrame, Dict[str, Any]]`
+- **Description:** A tuple containing:
+  - A corrected DataFrame with missing values imputed and outliers handled.
+  - A report of the validation and correction processes, which includes:
+    - `missing_values`: Summary of missing values in the DataFrame.
+    - `outliers`: Summary of detected outliers.
+    - `inconsistencies`: Summary of any inconsistencies found based on the specified rules.
+    - `corrections`: A description of the corrections applied to the dataset.
 
 ## Usage
+The function is typically used in data preprocessing workflows where data quality needs to be ensured before analysis. It is useful for automating checks and corrections, enhancing the reliability of the data used for further analysis.
 
-To use this package, you need to have pandas and numpy installed. You can install them using pip:
-
-```
-pip install pandas numpy
-```
-
-Once you have installed the required packages, you can import the functions from the package and use them in your code. Here's an example of how to import the functions:
-
-```python
-from data_preprocessing_utils import identify_missing_values, check_outliers_zscore
-```
-
-## Examples
-
-### Missing Values Functions
-
-#### Identify missing values
-
-```python
-import pandas as pd
-from data_preprocessing_utils import identify_missing_values
-
-df = pd.DataFrame({'A': [1, 2, np.nan], 'B': [np.nan, 5, 6]})
-missing_values = identify_missing_values(df)
-print(missing_values)
-```
-
-Output:
-```
-A    1
-B    1
-dtype: int64
-```
-
-#### Check if a dataset has missing values
-
-```python
-import pandas as pd
-from data_preprocessing_utils import check_missing_values
-
-df = pd.DataFrame({'A': [1, 2, np.nan], 'B': [np.nan, 5, 6]})
-has_missing_values = check_missing_values(df)
-print(has_missing_values)
-```
-
-Output:
-```
-True
-```
-
-#### Drop rows with missing values
-
-```python
-import pandas as pd
-from data_preprocessing_utils import drop_rows_with_missing_values
-
-df = pd.DataFrame({'A': [1, 2, np.nan], 'B': [np.nan, 5, 6]})
-filtered_df = drop_rows_with_missing_values(df)
-print(filtered_df)
-```
-
-Output:
-```
-     A    B
-1  2.0  5.0
-```
-
-#### Fill missing values
-
-```python
-import pandas as pd
-from data_preprocessing_utils import fill_missing_values
-
-df = pd.DataFrame({'A': [1, 2, np.nan], 'B': [np.nan, 5, 6]})
-filled_df = fill_missing_values(df, value=0)
-print(filled_df)
-```
-
-Output:
-```
-     A    B
-0  1.0  0.0
-1  2.0  5.0
-2  0.0  6.0
-```
-
-### Outlier Detection and Removal Functions
-
-#### Check for outliers using the z-score method
-
-```python
-import pandas as pd
-from data_preprocessing_utils import check_outliers_zscore
-
-df = pd.DataFrame({'A': [1, 2, 3, -10], 'B': [4, -5, -6, -7]})
-outliers = check_outliers_zscore(df)
-print(outliers)
-```
-
-Output:
-```
-       A      B
-0   False   True
-1   False   True
-2   False   True
-3    True   True
-```
-
-#### Remove outliers using the z-score method
-
-```python
-import pandas as pd
-from data_preprocessing_utils import remove_outliers_zscore
-
-df = pd.DataFrame({'A': [1, 2, 3, -10], 'B': [4, -5, -6, -7]})
-filtered_df = remove_outliers_zscore(df, column_name='A')
-print(filtered_df)
-```
-
-Output:
-```
-   A    B
-0  1    4
-1  2   -5
-2  3   -6
-```
-
-### Inconsistency Detection Functions
-
-#### Detect inconsistencies between columns in a dataset
-
-```python
-import pandas as pd
-from data_preprocessing_utils import detect_inconsistencies
-
-df = pd.DataFrame({'A': [1, 2, 3], 'B': ['a', 'b', 'c'], 'C': [True, False, True]})
-inconsistent_columns = detect_inconsistencies(df)
-print(inconsistent_columns)
-```
-
-Output:
-```
-[('A', 'B'), ('A', 'C'), ('B', 'C')]
-```
-
-### Categorical Variable Encoding Functions
-
-#### One-hot encode categorical variables
-
-```python
-import pandas as pd
-from data_preprocessing_utils import one_hot_encode
-
-df = pd.DataFrame({'Color': ['Red', 'Blue', 'Green'], 'Size': ['Small', 'Medium', 'Large']})
-encoded_df = one_hot_encode(df, columns=['Color'])
-print(encoded_df)
-```
-
-Output:
-```
-   Size  Color_Blue  Color_Green  Color_Red
-0   Red           0            0          1
-1  Blue           1            0          0
-2   Red           0            0          1
-```
-
-### Numerical Variable Standardization Functions
-
-#### Z-score normalization
-
-```python
-import pandas as pd
-from data_preprocessing_utils import z_score_normalization
-
-df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
-normalized_df = z_score_normalization(df, columns=['A'])
-print(normalized_df)
-```
-
-Output:
-```
-     A    B
-0 -1.0    4
-1  0.0    5
-2  1.0    6
-```
-
-### Datetime and String Variable Transformation Functions
-
-#### Transform datetime variables
-
-```python
-import pandas as pd
-from data_preprocessing_utils import transform_datetime
-
-df = pd.DataFrame({'date': ['2022-01-01', '2022-02-01', '2022-03-01']})
-transformed_year = transform_datetime(df, 'date', 'year')
-print(transformed_year)
-```
-
-Output:
-```
-0    2022
-1    2022
-2    2022
-Name: date, dtype: int64
-```
-
-### Column Type Conversion Function
-
-#### Convert data types of columns in a dataset
-
-```python
-import pandas as pd
-from data_preprocessing_utils import convert_data_types
-
-df = pd.DataFrame({'A': [1, 2, 3], 'B': ['4', '5', '6']})
-rules = {'A': float, 'B': int}
-converted_df = convert_data_types(df, rules)
-print(converted_df.dtypes)
-```
-
-Output:
-```
-A    float64
-B      int32
-dtype: object
-```
-
-### Create Dummy Variables Function
-
-#### Create dummy variables from categorical variables in a dataset
-
-```python
-import pandas as pd
-from data_preprocessing_utils import create_dummy_variables
-
-df = pd.DataFrame({'Color': ['Red', 'Blue', 'Green'], 'Size': ['Small', 'Medium', 'Large']})
-dummy_df = create_dummy_variables(df, columns=['Color'])
-print(dummy_df)
-```
-
-Output:
-```
-   Size  Color_Blue  Color_Green  Color_Red
-0   Red           0            0          1
-1  Blue           1            0          0
-2   Red           0            0          1
-```
-
-### Dataset Merge Function
-
-#### Merge datasets based on common columns or keys
-
-```python
-import pandas as pd
-from data_preprocessing_utils import merge_datasets
-
-df1 = pd.DataFrame({'A': [1, 2, 3], 'B': ['a', 'b', 'c']})
-df2 = pd.DataFrame({'A': [4, 5, 6], 'C': ['d', 'e', 'f']})
-merged_df = merge_datasets(df1, df2, on='A')
-print(merged_df)
-```
-
-Output:
-```
-   A  B  C
-0  1  a  NaN
-1  2  b  NaN
-2  3  c  NaN
-3  4 NaN   d
-4  5 NaN   e
-5  6 NaN   f
-```
-
-### Row Filter Function
-
-#### Filter rows in a data frame based on user-defined conditions
-
-```python
-import pandas as pd
-from data_preprocessing_utils import filter_rows
-
-df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, -5, -6]})
-filtered_df = filter_rows(df, column='B', condition=('between', -10, -5))
-print(filtered_df)
-```
-
-Output:
-```
-   A   B
-0  2 -5
-1  3 -6
-```
+## Example
